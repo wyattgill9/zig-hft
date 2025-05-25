@@ -17,7 +17,7 @@
             zig
             zls
             gdb
-            # valgrind 
+            scc
           ];
 
           shellHook = ''
@@ -25,7 +25,6 @@
             echo "Zig version: $(zig version)"
             echo "ZLS available for LSP support"
             
-            # Set up any additional environment variables
             # export ZIG_GLOBAL_CACHE_DIR="$PWD/.zig-cache"
           '';
         };

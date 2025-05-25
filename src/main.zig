@@ -2,28 +2,32 @@ const std = @import("std");
 const tsc = @import("tsc/mod.zig");
 const parse = @import("parser/mod.zig");
 
-pub fn make_itch_message() !parse.itch.ITCHMessage {
-    const data: [38]u8 = [_]u8{
-        0x41, // message_type (c_char)
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // timestamp (u64)
-        0x00, 0x00, 0x03, 0xea, // order_reference_num (u32)
-        0x00, 0x00, 0x00, 0x05, // transaction_id (u32)
-        0x00, 0xcd, 0x42, 0x00, // order_book_id (u32)
-        0x00, // side (c_char)
-        0x01, 0x00, 0x00, 0x00, // quantity (u32)
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f, // price (f64)
-        0x00, 0x00, 0x00, 0x01, // yield (f32)
-    };
-
-    return parse.itch.parse(&data);
-}
-
 pub fn main() !void {
-    const start = tsc.now();
+    // const data = [CHUNK_SIZE]u8{ // Example ITCH message
+    //     0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    //     0x00, 0x00, 0x00, 0x03, 0xea, 0x00, 0x00, 0x00,
+    //     0x00, 0x00, 0x05, 0x00, 0xcd, 0x42, 0x00, 0x00,
+    //     0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    //     0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+    // };
 
-    const message = try make_itch_message();
-    std.debug.print("message = {}\n", .{message}); 
+    const CHUNK_SIZE: u32 = 38; 
 
-    const end = tsc.now();
-    std.debug.print("cycles = {}\n", .{tsc.delta(start, end)});
+    var file = try std.fs.cwd().openFile("./src/data/ITCHMessage", .{});
+    defer file.close();
+
+    var buffer: [CHUNK_SIZE]u8 = undefined;
+
+    while (true) {
+        const bytesRead = try file.read(buffer[0..]);
+        if (bytesRead == 0) break;
+
+        if (bytesRead != CHUNK_SIZE) {
+            std.debug.print("Error: Expected {d} bytes, received {d}\n", .{ CHUNK_SIZE, bytesRead });
+            break;
+        }
+
+        const message = parse.itch.parseITCHMessage(buffer[0..]);
+        message.printInfo();
+    }
 }
