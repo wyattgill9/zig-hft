@@ -1,9 +1,9 @@
 pub fn rdtsc() u64 {
-    var low: u32 = 0;
-    var high: u32 = 0;
+    var low: u32 = undefined;
+    var high: u32 = undefined;
     asm volatile ("rdtsc"
-        : [low] "=a" (low),
-          [high] "=d" (high)
+        : [low] "={eax}" (low),
+          [high] "={edx}" (high)
     );
     return (@as(u64, high) << 32) | @as(u64, low);
 }

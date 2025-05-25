@@ -1,3 +1,4 @@
+// Run like 3 millions times in a second
 const std = @import("std");
 
 pub fn rdtsc() u64 {
