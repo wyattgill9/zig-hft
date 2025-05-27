@@ -17,6 +17,8 @@ pub fn main() !void {
     defer file.close();
 
     var buffer: [CHUNK_SIZE]u8 = undefined;
+   
+    const start = tsc.now();
 
     while (true) {
         const bytesRead = try file.read(buffer[0..]);
@@ -30,4 +32,7 @@ pub fn main() !void {
         const message = parse.itch.parseITCHMessage(buffer[0..]);
         message.printInfo();
     }
+
+    const end = tsc.now();
+    std.debug.print("Cycles {d}\n", .{tsc.delta(start, end)});
 }
