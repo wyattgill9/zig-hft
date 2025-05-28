@@ -4,7 +4,7 @@ const utils = @import("utils.zig");
 // TODO: remove the message_type in each struct, as it is inferred in the Union?
 
 pub const ITCHMessage = union(enum) {
-    // SystemEventMessage: SystemEventMessage,
+    SystemEventMessage: SystemEventMessage,
     StockDirectoryMessage: StockDirectoryMessage,
     // StockTradingActionMessage: StockTradingActionMessage,
     // ShortSalePriceTestMessage: ShortSalePriceTestMessage,
@@ -30,7 +30,7 @@ pub const ITCHMessage = union(enum) {
     pub fn initFromBytes(payload: []const u8) ITCHMessage {
         const msg_type = payload[0];
         return switch (msg_type) {
-            // 'S' => ITCHMessage{ .SystemEventMessage = SystemEventMessage.initFromBytes(payload) }, 
+            'S' => ITCHMessage{ .SystemEventMessage = SystemEventMessage.initFromBytes(payload) }, 
             'R' => ITCHMessage{ .StockDirectoryMessage = StockDirectoryMessage.initFromBytes(payload) },
             // 'H' => ITCHMessage{ .StockTradingActionMessage = StockTradingActionMessage.initFromBytes(payload) },  
             // 'Y' => ITCHMessage{ .ShortSalePriceTestMessage = ShortSalePriceTestMessage.initFromBytes(payload) },
@@ -67,74 +67,41 @@ pub const ITCHMessage = union(enum) {
     }
 };
 
-    // const SystemEventMessage = struct {
-//     stock_locate: u16,
-//     tracking_number: u16,
-//     timestamp: [6]u8, // exactly 6 bytes
-//     event_code: u8,
-//
-//     pub fn initFromBytes(payload: []const u8) SystemEventMessage {
-//         return SystemEventMessage {
-//             .stock_locate = utils.readU16(payload, 0),
-//             .tracking_number = utils.readU16(payload, 2),
-//             .timestamp = payload[4..10].*,
-//             .event_code = utils.readU8(payload, 10),
-//         };
-//     }
-//
-//     pub fn getTimestamp(self: *const SystemEventMessage) u64 {
-//         return std.mem.readInt(u64, &self.timestamp, .big);
-//     }
-//
-//     pub fn printInfo(self: SystemEventMessage) void {
-//         std.debug.print("SystemEventMessage {\n", .{});
-//         std.debug.print("   stock_locate        = {d}\n", .{self.stock_locate});
-//         std.debug.print("   tracking_number     = {d}\n", .{self.tracking_number});
-//         std.debug.print("   timestamp           = {d}\n", .{self.getTimestamp()});
-//
-//         const event_code_str = switch (self.event_code) {
-//             'O' => "Start of Messages",
-//             'S' => "Start of System hours",
-//             'Q' => "Start of Market hours",
-//             'M' => "End of Market hours",
-//             'E' => "End of System hours",
-//             'C' => "End of Messages",
-//             else => "Unknown event code",
-//         };
-//
-//         std.debug.print("   event_code          = {s}\n", .{event_code_str});
-//         std.debug.print("}\n\n", .{});
-//     }
-// };
+const SystemEventMessage = struct {
+    stock_locate: u16,
+    tracking_number: u16,
+    timestamp: [6]u8, // exactly 6 bytes
+    event_code: u8,
 
+    pub fn initFromBytes(payload: []const u8) SystemEventMessage {
+        return SystemEventMessage {
+            .stock_locate = utils.readU16(payload, 0),
+            .tracking_number = utils.readU16(payload, 2),
+            .timestamp = payload[4..10].*,
+            .event_code = utils.readU8(payload, 10),
+        };
+    }
 
-// const MarketCatagory = union(enum(u8)) {
-    // NasdaqGlobalSelectedMarket,
-    // NasdaqGlobalMarket,
-    // NasdaqCapitalMarket,
-    // NYCE, 
-    // NYSEAmerican,
-    // NYSEArca,
-    // BATSZExchange,
-    // InvestorsExchange,
-    // NotAvailable
-// };
-//
-// const FinancialStatusIndicator = union(enum(u8)) {
-//     Deficient,
-//     Delinquent,
-//     Bankrupt,
-//     Suspended,
-//     DeficientAndBankrupt,
-//     DeficientAndDelinquent,
-//     DelinquentAndBankrupt,
-//     DeficientDelinquentAndBankrupt,
-//     CRSETP, // Creation and/or Redemption Suspended for Exchange Trading Products 
-//     Normal, //Normal (Default): Issuer Is NOT Deficient, Delinquent, or Bankrupt
-//     NotAvailable
-// };
+    pub fn printInfo(self: SystemEventMessage) void {
+        std.debug.print("SystemEventMessage {{\n", .{});
+        std.debug.print("   stock_locate        = {d}\n", .{self.stock_locate});
+        std.debug.print("   tracking_number     = {d}\n", .{self.tracking_number});
+        std.debug.print("   timestamp           = {d}\n", .{self.timestamp});
 
+        const event_code_str = switch (self.event_code) {
+            'O' => "Start of Messages",
+            'S' => "Start of System hours",
+            'Q' => "Start of Market hours",
+            'M' => "End of Market hours",
+            'E' => "End of System hours",
+            'C' => "End of Messages",
+            else => "Unknown event code",
+        };
 
+        std.debug.print("   event_code          = {s}\n", .{event_code_str});
+        std.debug.print("}}\n\n", .{});
+    }
+};
 
 const StockDirectoryMessage = struct {
     message_type: u8,                            // 0
