@@ -66,3 +66,13 @@ pub fn printFinancialStatusIndicator(code: u8) []const u8 {
         else => "Unknown Financial Status Indicator",
     };
 }
+
+pub fn printTradingState(code: u8) []const u8 {
+    return switch (code) {
+        'H' => "Halted across all U.S. equity markets / SROs",
+        'P' => "Paused across all U.S. equity markets / SROs (Nasdaq---listed securities only)",
+        'Q' => "Quotation only period for cross-•-SRO halt or pause",
+        'T' => "Trading on Nasdaq", 
+        else => "Unknown Trading State Code",
+    };
+}

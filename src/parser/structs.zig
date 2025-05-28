@@ -171,10 +171,40 @@ const StockDirectoryMessage = struct {
 };
 
 const StockTradingActionMessage = struct {
-    
-    // pub fn initFromBytes(payload: []const u8) StockTradingActionMessage {
-    //
-    // }
+    message_type: u8, // H
+    stock_locate: u16,
+    tracking_number: u16,
+    timestamp: [6]u8, // exactly 6 bytes
+    stock: [8]u8,
+    trading_state: u8,
+    reserved: u8,
+    reason: [4]u8,
+
+    pub fn initFromBytes(payload: []const u8) StockTradingActionMessage {
+        return StockTradingActionMessage{
+            .message_type = utils.readU8(payload, 0), // should be H FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .stock_locate = utils.readU16(payload, 1),
+            .tracking_number = utils.readU16(payload, 3),
+            .timestamp = payload[5..11].*,
+            .stock = payload[11..19].*,
+            .trading_state = utils.readU8(payload, 19),
+            .reserved = utils.readU8(payload, 20),
+            .reason = payload[21..25].*,
+        };
+    }
+
+    pub fn printInfo(self: StockTradingActionMessage) void {
+        std.debug.print("StockTradingActionMessage {{\n", .{});
+        std.debug.print("  message_type = {c}\n", .{self.message_type});
+        std.debug.print("  stock_locate = {d}\n", .{self.stock_locate});
+        std.debug.print("  tracking_number = {d}\n", .{self.tracking_number});
+        std.debug.print("  timestamp = {d}\n", .{self.timestamp});
+        std.debug.print("  stock = {s}\n", .{self.stock});
+        std.debug.print("  trading_state = {s}\n", .{utils.printTradingState(self.trading_state)});
+        std.debug.print("  reserved = {c}\n", .{self.reserved});
+        std.debug.print("  reason = {s}\n", .{self.reason});
+        std.debug.print("}}\n\n", .{});
+    }
 };
 
 const ShortSalePriceTestMessage = struct {
