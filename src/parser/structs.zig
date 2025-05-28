@@ -6,8 +6,8 @@ const utils = @import("utils.zig");
 pub const ITCHMessage = union(enum) {
     SystemEventMessage: SystemEventMessage,
     StockDirectoryMessage: StockDirectoryMessage,
-    // StockTradingActionMessage: StockTradingActionMessage,
-    // ShortSalePriceTestMessage: ShortSalePriceTestMessage,
+    StockTradingActionMessage: StockTradingActionMessage,
+    ShortSalePriceTestMessage: ShortSalePriceTestMessage,
     // MarketParticipantPositionMessage: MarketParticipantPositionMessage,
     // MWCBDeclineLevelMessage: MWCBDeclineLevelMessage,
     // MWCBStatusMessage: MWCBStatusMessage,
@@ -32,8 +32,8 @@ pub const ITCHMessage = union(enum) {
         return switch (msg_type) {
             'S' => ITCHMessage{ .SystemEventMessage = SystemEventMessage.initFromBytes(payload) }, 
             'R' => ITCHMessage{ .StockDirectoryMessage = StockDirectoryMessage.initFromBytes(payload) },
-            // 'H' => ITCHMessage{ .StockTradingActionMessage = StockTradingActionMessage.initFromBytes(payload) },  
-            // 'Y' => ITCHMessage{ .ShortSalePriceTestMessage = ShortSalePriceTestMessage.initFromBytes(payload) },
+            'H' => ITCHMessage{ .StockTradingActionMessage = StockTradingActionMessage.initFromBytes(payload) },  
+            'Y' => ITCHMessage{ .ShortSalePriceTestMessage = ShortSalePriceTestMessage.initFromBytes(payload) },
             // 'L' => ITCHMessage{ .MarketParticipantPositionMessage = MarketParticipantPositionMessage.initFromBytes(payload) },
             // 'V' => ITCHMessage{ .MWCBDeclineLevelMessage = MWCBDeclineLevelMessage.initFromBytes(payload) },
             // 'W' => ITCHMessage{ .MWCBStatusMessage = MWCBStatusMessage.initFromBytes(payload) },
@@ -208,15 +208,74 @@ const StockTradingActionMessage = struct {
 };
 
 const ShortSalePriceTestMessage = struct {
-   // pub fn initFromBytes(payload: []const u8) ShortSalePriceTestMessage {
-   //
-   // } 
+    message_type: u8, 
+    stock_locate: u16,
+    tracking_number: u16,
+    timestamp: [6]u8,
+    stock: [8]u8,
+    reg_sho_action: u8,
+
+    pub fn initFromBytes(payload: []const u8) ShortSalePriceTestMessage {
+        return ShortSalePriceTestMessage{
+            .message_type = utils.readU8(payload, 0), // should be H FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .stock_locate = utils.readU16(payload, 1),
+            .tracking_number = utils.readU16(payload, 3),
+            .timestamp = payload[5..11].*,
+            .stock = payload[11..19].*,
+            .reg_sho_action = utils.readU8(payload, 19),
+        };
+    }
+
+    pub fn printInfo(self: ShortSalePriceTestMessage) void {
+        std.debug.print("ShortSalePriceTestMessage {{\n", .{});
+        std.debug.print("  message_type = {c}\n", .{self.message_type});
+        std.debug.print("  stock_locate = {d}\n", .{self.stock_locate});
+        std.debug.print("  tracking_number = {d}\n", .{self.tracking_number});
+        std.debug.print("  timestamp = {d}\n", .{self.timestamp});
+        std.debug.print("  stock = {s}\n", .{self.stock});
+        std.debug.print("  reg_sho_action = {s}\n", .{utils.printRegSHOAction(self.reg_sho_action)});
+        std.debug.print("}}\n\n", .{});
+    }
 };
 
 const MarketParticipantPositionMessage = struct {
-    // pub fn initFromBytes(payload: []const u8) MarketParticipantPositionMessage {
-    //
-    // }
+    message_type: u8,
+    stock_locate: u16,
+    tracking_number: u16,
+    timestamp: [6]u8,
+    market_participant_id: [4]u8,
+    stock: [8]u8,
+    primary_market_maker: u8,
+    market_maker_mode: u8,
+    market_participant_state: u8,
+
+    pub fn initFromBytes(payload: []const u8) MarketParticipantPositionMessage {
+        return MarketParticipantPositionMessage{
+            .message_type = utils.readU8(payload, 0), // should be H FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .stock_locate = utils.readU16(payload, 1),
+            .tracking_number = utils.readU16(payload, 3),
+            .timestamp = payload[5..11].*,
+            .market_participant_id = payload[11..15].*,
+            .stock = payload[15..23].*,
+            .primary_market_maker = utils.readU8(payload, 23),
+            .market_maker_mode = utils.readU8(payload, 24),
+            .market_participant_state = utils.readU8(payload, 25),
+        };
+    }
+
+    pub fn printInfo(self: MarketParticipantPositionMessage) void {
+        std.debug.print("MarketParticipantPositionMessage {{\n", .{});
+        std.debug.print("  message_type = {c}\n", .{self.message_type});        
+        std.debug.print("  stock_locate = {d}\n", .{self.stock_locate});
+        std.debug.print("  tracking_number = {d}\n", .{self.tracking_number});
+        std.debug.print("  timestamp = {d}\n", .{self.timestamp});
+        std.debug.print("  market_participant_id = {s}\n", .{self.market_participant_id});
+        std.debug.print("  stock = {s}\n", .{self.stock});
+        std.debug.print("  primary_market_maker = {c}\n", .{self.primary_market_make});
+        std.debug.print("  market_maker_mode = {s}\n", .{utils.printMarketMakerMode(self.market_maker_mode)});
+        std.debug.print("  market_participant_state = {s}\n", .{utils.printMarketParticipantState(self.market_participant_state)});
+        std.debug.print("}}\n\n", .{});         
+    } 
 };
 
 const MWCBDeclineLevelMessage = struct {
@@ -321,4 +380,4 @@ const DirectListingWithCapitalRaisePriceMessage = struct {
     // }
 };
 
-fn main() void {}
+pub fn main() void {}

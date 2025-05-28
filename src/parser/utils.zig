@@ -76,3 +76,34 @@ pub fn printTradingState(code: u8) []const u8 {
         else => "Unknown Trading State Code",
     };
 }
+
+pub fn printRegSHOAction(code: u8) []const u8 {
+    return switch (code) {
+        '0' => "No price test in place",
+        '1' => "Reg SHO Short Sale Price Test Restriction in effect due to an intra-day price drop in security",
+        '2' => "Reg SHO Short Sale Price Test Restriction remains in effect",
+        else => "Unknown RegSHOAction Code",
+    };
+}
+
+pub fn printMarketMakerMode(code: u8) []const u8 {
+    return switch (code) {
+        'N' => "normal",
+        'P' => "passive",
+        'S' => "syndicate",
+        'R' => "pre-syndicate",
+        'L' => "penalty",
+        else => "Unknown Market Maker Code",
+    };
+}
+
+pub fn printMarketParticipantState(code: u8) []const u8 {
+    return switch (code) {
+        'A' => "Active",
+        'E' => "Excused/Withdrawn",
+        'W' => "Withdrawn",
+        'S' => "Suspended",
+        'D' => "Deleted",
+        else => "Unknown Market Participant State Code",
+    };
+}
