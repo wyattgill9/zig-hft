@@ -3,15 +3,7 @@ const tsc = @import("tsc/mod.zig");
 const parse = @import("parser/mod.zig");
 
 pub fn main() !void {
-    // const data = [CHUNK_SIZE]u8{ // Example ITCH message
-    //     0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    //     0x00, 0x00, 0x00, 0x03, 0xea, 0x00, 0x00, 0x00,
-    //     0x00, 0x00, 0x05, 0x00, 0xcd, 0x42, 0x00, 0x00,
-    //     0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    //     0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-    // };
-
-    const CHUNK_SIZE: u32 = 38; 
+    const CHUNK_SIZE: u32 = 39; 
 
     var file = try std.fs.cwd().openFile("./src/data/ITCHMessage", .{});
     defer file.close();
@@ -29,7 +21,7 @@ pub fn main() !void {
             break;
         }
 
-        const message = parse.itch.parseITCHMessage(buffer[0..]);
+        const message = parse.parseITCHMessage(buffer[0..]);
         message.printInfo();
     }
 

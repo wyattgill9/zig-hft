@@ -7,9 +7,9 @@ pub const ITCHMessage = union(enum) {
     SystemEventMessage: SystemEventMessage,
     StockDirectoryMessage: StockDirectoryMessage,
     StockTradingActionMessage: StockTradingActionMessage,
+    MarketParticipantPositionMessage: MarketParticipantPositionMessage,
     ShortSalePriceTestMessage: ShortSalePriceTestMessage,
-    // MarketParticipantPositionMessage: MarketParticipantPositionMessage,
-    // MWCBDeclineLevelMessage: MWCBDeclineLevelMessage,
+    MWCBDeclineLevelMessage: MWCBDeclineLevelMessage,
     // MWCBStatusMessage: MWCBStatusMessage,
     // IPOQuotationPeriodUpdateMessage: IPOQuotationPeriodUpdateMessage,
     // LULDAuctionCollarMessage: LULDAuctionCollarMessage,
@@ -217,7 +217,7 @@ const ShortSalePriceTestMessage = struct {
 
     pub fn initFromBytes(payload: []const u8) ShortSalePriceTestMessage {
         return ShortSalePriceTestMessage{
-            .message_type = utils.readU8(payload, 0), // should be H FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .message_type = utils.readU8(payload, 0), // should be Y FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
             .stock_locate = utils.readU16(payload, 1),
             .tracking_number = utils.readU16(payload, 3),
             .timestamp = payload[5..11].*,
@@ -251,7 +251,7 @@ const MarketParticipantPositionMessage = struct {
 
     pub fn initFromBytes(payload: []const u8) MarketParticipantPositionMessage {
         return MarketParticipantPositionMessage{
-            .message_type = utils.readU8(payload, 0), // should be H FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .message_type = utils.readU8(payload, 0), // should be L FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
             .stock_locate = utils.readU16(payload, 1),
             .tracking_number = utils.readU16(payload, 3),
             .timestamp = payload[5..11].*,
@@ -271,7 +271,7 @@ const MarketParticipantPositionMessage = struct {
         std.debug.print("  timestamp = {d}\n", .{self.timestamp});
         std.debug.print("  market_participant_id = {s}\n", .{self.market_participant_id});
         std.debug.print("  stock = {s}\n", .{self.stock});
-        std.debug.print("  primary_market_maker = {c}\n", .{self.primary_market_make});
+        std.debug.print("  primary_market_maker = {c}\n", .{self.primary_market_maker});
         std.debug.print("  market_maker_mode = {s}\n", .{utils.printMarketMakerMode(self.market_maker_mode)});
         std.debug.print("  market_participant_state = {s}\n", .{utils.printMarketParticipantState(self.market_participant_state)});
         std.debug.print("}}\n\n", .{});         
@@ -279,15 +279,65 @@ const MarketParticipantPositionMessage = struct {
 };
 
 const MWCBDeclineLevelMessage = struct {
-    // pub fn initFromBytes(payload: []const u8) MWCBDeclineLevelMessage {
-    //
-    // }
+    message_type: u8,
+    stock_locate: u16,
+    tracking_number: u16,
+    timestamp: [6]u8,
+    level_one_price: f32,
+    level_two_price: f32,
+    level_three_price: f32,
+
+    pub fn initFromBytes(payload: []const u8) MWCBDeclineLevelMessage {
+        return MWCBDeclineLevelMessage{
+            .message_type = utils.readU8(payload, 0), // should be V FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .stock_locate = utils.readU16(payload, 1),
+            .tracking_number = utils.readU16(payload, 3),
+            .timestamp = payload[5..11].*,
+            .level_one_price = utils.readF32(payload, 11),
+            .level_two_price = utils.readF32(payload, 15),
+            .level_three_price = utils.readF32(payload, 19),
+        };
+    }
+
+    pub fn printInfo(self: MWCBDeclineLevelMessage) void {
+        std.debug.print("MWCBDeclineLevelMessage {{\n", .{});
+        std.debug.print("  message_type = {c}\n", .{self.message_type});
+        std.debug.print("  stock_locate = {d}\n", .{self.stock_locate});
+        std.debug.print("  tracking_number = {d}\n", .{self.tracking_number});
+        std.debug.print("  timestamp = {d}\n", .{self.timestamp});
+        std.debug.print("  level_one_price = {d}\n", .{self.level_one_price});
+        std.debug.print("  level_two_price = {d}\n", .{self.level_two_price});
+        std.debug.print("  level_three_price = {d}\n", .{self.level_three_price});
+        std.debug.print("}}\n\n", .{});
+    }
 };
 
 const MWCBStatusMessage = struct {
-    // pub fn initFromBytes(payload: []const u8) MWCBStatusMessage {
-    //
-    // }
+    message_type: u8,
+    stock_locate: u16,
+    tracking_number: u16,
+    timestamp: [6]u8,
+    breached_level: u8,
+
+    pub fn initFromBytes(payload: []const u8) MWCBStatusMessage {
+        return MWCBStatusMessage{
+            .message_type = utils.readU8(payload, 0), // should be V FIXME: dont include this bc its already checked in ITCHMessage.IntFromBytes 
+            .stock_locate = utils.readU16(payload, 1),
+            .tracking_number = utils.readU16(payload, 3),
+            .timestamp = payload[5..11].*,
+            .breached_level = utils.readU8(payload, 11),
+        };
+    }
+
+    pub fn printInfo(self: MWCBStatusMessage) void {
+        std.debug.print("MWCBStatusMessage {{\n", .{});
+        std.debug.print("  message_type = {c}\n", .{self.message_type});
+        std.debug.print("  stock_locate = {d}\n", .{self.stock_locate});
+        std.debug.print("  tracking_number = {d}\n", .{self.tracking_number});
+        std.debug.print("  timestamp = {d}\n", .{self.timestamp});
+        std.debug.print("  breached_level = {d}\n", .{self.breached_level});
+        std.debug.print("}}\n\n", .{});
+    }
 };
 
 const IPOQuotationPeriodUpdateMessage = struct {
