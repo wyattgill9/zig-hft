@@ -10,8 +10,8 @@ pub fn getMessageSize(buffer: []const u8) u32 {
 
     return switch (msg_type) {  
         'S' => @sizeOf(structs.SystemEventMessage), 
-        'R' => @sizeOf(structs.StockDirectoryMessage),
-        'H' => @sizeOf(structs.StockTradingActionMessage) + 1,  
+        'R' => 39, // FIXME: ADD THE APROPRIAT FOR EACH, ITS NOT -> @sizeOf(structs.StockDirectoryMessage),
+        'H' => @sizeOf(structs.StockTradingActionMessage),  
         'Y' => @sizeOf(structs.ShortSalePriceTestMessage),
         'L' => @sizeOf(structs.MarketParticipantPositionMessage),
         'V' => @sizeOf(structs.MWCBDeclineLevelMessage),
@@ -46,4 +46,3 @@ pub fn isValidMessageType(b: u8) bool {
         else => false,
     };
 }
-

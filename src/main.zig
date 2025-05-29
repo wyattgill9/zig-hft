@@ -32,19 +32,19 @@ pub fn main() !void {
                 break;
             }
 
-            const msg_size = 39; //parse.getMessageSize(slice[offset..]);
+            const msg_size = parse.getMessageSize(slice[offset..]);
+
             if (offset + @as(usize, @intCast(msg_size)) > bytesRead) {
                 std.debug.print("Incomplete message at end of chunk\n", .{});
                 break;
             }
 
             const msg_slice = slice[offset .. offset + @as(usize, @intCast(msg_size))];
-            _ = parse.parseITCHMessage(msg_slice);
-            std.debug.print("sizeOf: {d}\n", .{@sizeOf(structs.StockDirectoryMessage)});
+            const msg = parse.parseITCHMessage(msg_slice);
+            msg.printInfo();
 
-            std.debug.print("alignOf: {d}\n", .{@alignOf(structs.StockDirectoryMessage)});
+            std.debug.print("Message type: {c}, size: {d}, offset: {d}\n", .{slice[offset], msg_size, offset});
             offset += @as(usize, @intCast(msg_size));
-            break; 
         }
     }
 
