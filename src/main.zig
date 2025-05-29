@@ -10,7 +10,7 @@ pub fn main() !void {
 
     var buffer: [CHUNK_SIZE]u8 = undefined;
    
-    const start = tsc.now();
+    // const start = tsc.now();
 
     while (true) {
         const bytesRead = try file.read(buffer[0..]);
@@ -20,10 +20,12 @@ pub fn main() !void {
             std.debug.print("Error: Expected {d} bytes, received {d}\n", .{ CHUNK_SIZE, bytesRead });
             break;
         }
+    }        
+        
+    const start = tsc.now();
 
-        const message = parse.parseITCHMessage(buffer[0..]);
-        message.printInfo();
-    }
+    const message = parse.parseITCHMessage(buffer[0..]);
+    std.debug.print("{c}\n", .{message.StockDirectoryMessage.message_type});
 
     const end = tsc.now();
     std.debug.print("Cycles {d}\n", .{tsc.delta(start, end)});
