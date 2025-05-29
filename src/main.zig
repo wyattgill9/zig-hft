@@ -24,8 +24,8 @@ pub fn main() !void {
         
     const start = tsc.now();
 
-    const message = parse.parseITCHMessage(buffer[0..]);
-    std.debug.print("{c}\n", .{message.StockDirectoryMessage.message_type});
+    _ = parse.parseITCHMessage(buffer[0..]);
+    // std.debug.print("{c}\n", .{message.StockDirectoryMessage.message_type});
 
     const end = tsc.now();
     std.debug.print("Cycles {d}\n", .{tsc.delta(start, end)});

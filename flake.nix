@@ -18,6 +18,7 @@
             zls
             gdb
             scc
+            hyperfine
           ];
 
           shellHook = ''
