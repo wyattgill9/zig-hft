@@ -54,7 +54,10 @@ pub const ITCHMessage = union(enum) {
             'B' => ITCHMessage{ .BrokenTradeMessage = BrokenTradeMessage.initFromBytes(payload) },
             'I' => ITCHMessage{ .NOIIMessage = NOIIMessage.initFromBytes(payload) },
             'N' => ITCHMessage{ .DirectListingWithCapitalRaisePriceMessage = DirectListingWithCapitalRaisePriceMessage.initFromBytes(payload) },
-            else => unreachable,
+            else => {
+                std.debug.print("Unknown message type: {}\n", .{msg_type});
+                unreachable;
+            },
         };
     }
 
@@ -69,7 +72,7 @@ pub const ITCHMessage = union(enum) {
     }
 };
 
-const SystemEventMessage = struct {
+pub const SystemEventMessage = struct {
     stock_locate: u16,
     tracking_number: u16,
     timestamp: [6]u8, // exactly 6 bytes
@@ -105,7 +108,7 @@ const SystemEventMessage = struct {
     }
 };
 
-const StockDirectoryMessage = struct {
+pub const StockDirectoryMessage = struct {
     message_type: u8,                            // 0
     stock_locate: u16,                           // 1-2
     tracking_number: u16,                        // 3-4
@@ -172,7 +175,7 @@ const StockDirectoryMessage = struct {
     }
 };
 
-const StockTradingActionMessage = struct {
+pub const StockTradingActionMessage = struct {
     message_type: u8, // H
     stock_locate: u16,
     tracking_number: u16,
@@ -209,7 +212,7 @@ const StockTradingActionMessage = struct {
     }
 };
 
-const ShortSalePriceTestMessage = struct {
+pub const ShortSalePriceTestMessage = struct {
     message_type: u8, 
     stock_locate: u16,
     tracking_number: u16,
@@ -240,7 +243,7 @@ const ShortSalePriceTestMessage = struct {
     }
 };
 
-const MarketParticipantPositionMessage = struct {
+pub const MarketParticipantPositionMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -287,7 +290,7 @@ const MarketParticipantPositionMessage = struct {
 //     timestamp: [6]u8,
 // };
 
-const MWCBDeclineLevelMessage = struct {
+pub const MWCBDeclineLevelMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -321,7 +324,7 @@ const MWCBDeclineLevelMessage = struct {
     }
 };
 
-const MWCBStatusMessage = struct {
+pub const MWCBStatusMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -349,7 +352,7 @@ const MWCBStatusMessage = struct {
     }
 };
 
-const QuotingPeriodUpdateMessage = struct {
+pub const QuotingPeriodUpdateMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -383,7 +386,7 @@ const QuotingPeriodUpdateMessage = struct {
     }
 };
 
-const LULDAuctionCollarMessage = struct {
+pub const LULDAuctionCollarMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -425,7 +428,7 @@ const LULDAuctionCollarMessage = struct {
 
 };
 
-const OperationalHaltMessage = struct {
+pub const OperationalHaltMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -459,7 +462,7 @@ const OperationalHaltMessage = struct {
     }
 };
 
-const AddOrderNoMPIDMessage = struct {
+pub const AddOrderNoMPIDMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -499,7 +502,7 @@ const AddOrderNoMPIDMessage = struct {
     }
 };
 
-const AddOrderWithMPIDMessage = struct {
+pub const AddOrderWithMPIDMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -542,7 +545,7 @@ const AddOrderWithMPIDMessage = struct {
     }
 };
 
-const OrderExecutedMessage = struct {
+pub const OrderExecutedMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -576,7 +579,7 @@ const OrderExecutedMessage = struct {
     }
 };
 
-const OrderExecutedwithPriceMessage = struct {
+pub const OrderExecutedwithPriceMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -616,7 +619,7 @@ const OrderExecutedwithPriceMessage = struct {
     }
 };
 
-const OrderCancelMessage = struct {
+pub const OrderCancelMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -647,7 +650,7 @@ const OrderCancelMessage = struct {
     }
 };
 
-const OrderDeleteMessage = struct {
+pub const OrderDeleteMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -675,7 +678,7 @@ const OrderDeleteMessage = struct {
     }
 };
 
-const OrderReplaceMessage = struct {
+pub const OrderReplaceMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -712,7 +715,7 @@ const OrderReplaceMessage = struct {
     }
 };
 
-const TradeMessage = struct {
+pub const TradeMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -755,7 +758,7 @@ const TradeMessage = struct {
     }
 };
 
-const CrossTradeMessage = struct {
+pub const CrossTradeMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -795,7 +798,7 @@ const CrossTradeMessage = struct {
     }
 };
 
-const BrokenTradeMessage = struct {
+pub const BrokenTradeMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -823,7 +826,7 @@ const BrokenTradeMessage = struct {
     }
 };
 
-const NOIIMessage = struct {
+pub const NOIIMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,
@@ -875,7 +878,7 @@ const NOIIMessage = struct {
     }
 };
 
-const DirectListingWithCapitalRaisePriceMessage = struct {
+pub const DirectListingWithCapitalRaisePriceMessage = struct {
     message_type: u8,
     stock_locate: u16,
     tracking_number: u16,

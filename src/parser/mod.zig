@@ -1,33 +1,49 @@
-const ITCHMessage = @import("structs.zig").ITCHMessage;
+const structs = @import("structs.zig");
+const std = @import("std");
 
-pub fn parseITCHMessage(buffer: []const u8) ITCHMessage {
-    return ITCHMessage.initFromBytes(buffer); 
+pub fn parseITCHMessage(buffer: []const u8) structs.ITCHMessage {
+    return structs.ITCHMessage.initFromBytes(buffer); 
 }
 
-// pub fn main() !void {
-//     // Dummy message (fill with valid bytes as needed for real test)
-//     const message: [39]u8 = .{
-//         'R',        // message_type
-//         0x00, 0x01, // stock_locate
-//         0x00, 0x02, // tracking_number
-//         0x00, 0x00, 0x00, 0x00, 0x03, 0x04, // timestamp (6 bytes)
-//         'A','B','C','D','E','F','G','H',     // stock (8 bytes)
-//         'Q',        // market_category
-//         'N',        // financial_status_indicator
-//         0x00, 0x00, 0x27, 0x10, // round_lot_size (10000)
-//         'Y',        // round_lots_only
-//         'E',        // issue_classification
-//         'X', 'Y',   // issue_sub_type
-//         'P',        // authenticity
-//         'N',        // short_sale_threshold_indicator
-//         'Y',        // ipo_flag
-//         '1',        // luld_reference_price_tier
-//         'Y',        // etp_flag
-//         0x00, 0x00, 0x00, 0x03, // etp_leverage_factor (3)
-//         'N'         // inverse_indicator
-//     };
-//
-//     const parsed_message = parseITCHMessage(&message);
-//
-//     parsed_message.printInfo();
-// }
+pub fn getMessageSize(buffer: []const u8) u32 {
+    const msg_type = buffer[0]; 
+
+    return switch (msg_type) {  
+        'S' => @sizeOf(structs.SystemEventMessage), 
+        'R' => @sizeOf(structs.StockDirectoryMessage),
+        'H' => @sizeOf(structs.StockTradingActionMessage) + 1,  
+        'Y' => @sizeOf(structs.ShortSalePriceTestMessage),
+        'L' => @sizeOf(structs.MarketParticipantPositionMessage),
+        'V' => @sizeOf(structs.MWCBDeclineLevelMessage),
+        'W' => @sizeOf(structs.MWCBStatusMessage),
+        'K' => @sizeOf(structs.QuotingPeriodUpdateMessage),
+        'J' => @sizeOf(structs.LULDAuctionCollarMessage),
+        'h' => @sizeOf(structs.OperationalHaltMessage),
+        'A' => @sizeOf(structs.AddOrderNoMPIDMessage),
+        'F' => @sizeOf(structs.AddOrderWithMPIDMessage),
+        'E' => @sizeOf(structs.OrderExecutedMessage),
+        'C' => @sizeOf(structs.OrderExecutedwithPriceMessage),
+        'X' => @sizeOf(structs.OrderCancelMessage),
+        'D' => @sizeOf(structs.OrderDeleteMessage),
+        'U' => @sizeOf(structs.OrderReplaceMessage),
+        'P' => @sizeOf(structs.TradeMessage),
+        'Q' => @sizeOf(structs.CrossTradeMessage),
+        'B' => @sizeOf(structs.BrokenTradeMessage),
+        'I' => @sizeOf(structs.NOIIMessage),
+        'N' => @sizeOf(structs.DirectListingWithCapitalRaisePriceMessage),
+        else => {
+            std.debug.print("Unknown message type: {}\n", .{msg_type});
+            unreachable;
+        },
+    }; 
+}
+
+pub fn isValidMessageType(b: u8) bool {
+    return switch (b) {
+        'S', 'R', 'H', 'Y', 'L', 'V', 'W', 'K', 'J', 'h',
+        'A', 'F', 'E', 'C', 'X', 'D', 'U', 'P', 'Q', 'B',
+        'I', 'N' => true,
+        else => false,
+    };
+}
+

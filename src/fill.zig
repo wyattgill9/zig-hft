@@ -22,13 +22,20 @@ pub fn main() !void {
         'N'         // inverse_indicator
     };
 
+    const total_bytes: usize = 1024 * 1024; // 1 MiB
+    const message_count: usize = total_bytes / message.len;
+
     const file = try std.fs.cwd().createFile("./data/ITCHMessage", .{
         .truncate = true,
         .read = false,
     });
     defer file.close();
 
-    try file.writeAll(&message);
+    var writer = file.writer();
+    var i: usize = 0;
+    while (i < message_count) : (i += 1) {
+        try writer.writeAll(&message);
+    }
 
-    std.debug.print("Written {} bytes to ITCHMessage\n", .{message.len});
+    std.debug.print("Written {} messages, {} total bytes to ITCHMessage\n", .{message_count, message_count * message.len});
 }
