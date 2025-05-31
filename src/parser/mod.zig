@@ -34,6 +34,37 @@ pub fn parseITCHMessage(msg_type: u8, payload: []const u8) ITCHMessage {
     }; 
 }
 
+pub fn getMessageLength(msg_type: u8) u32 {
+    return switch (msg_type) {
+        'S' => 12, 
+        'R' => 39,
+        'H' => 25,  
+        'Y' => 20,
+        'L' => 26,
+        'V' => 23,
+        'W' => 12,
+        'K' => 20,
+        'J' => 35,
+        'h' => 21,
+        'A' => 23,
+        'F' => 40,
+        'E' => 31,
+        'C' => 36,
+        'X' => 23,
+        'D' => 19,
+        'U' => 35,
+        'P' => 44,
+        'Q' => 40,
+        'B' => 19,
+        'I' => 50,
+        'N' => 48,
+        else => {
+            std.debug.print("Unknown message type: {}\n", .{msg_type});
+            unreachable;
+        },
+    }; 
+}
+
 pub fn isValidMessageType(b: u8) bool {
     return switch (b) {
         'S', 'R', 'H', 'Y', 'L', 'V', 'W', 'K', 'J', 'h',

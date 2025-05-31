@@ -291,9 +291,13 @@ pub const QuotingPeriodUpdateMessage = struct {
         std.debug.print("QuotingPeriodUpdateMessage {{\n", .{});
         self.header.printInfo(); 
         std.debug.print("  ipo_quotation_release_time = {d}\n", .{self.ipo_quotation_release_time});
-        // FIXME: return a enum, instead of error 
-        assert(self.ipo_quotation_release_qualifier == 'A' or self.ipo_quotation_release_qualifier == 'C'); 
-        std.debug.print("  ipo_quotation_release_qualifier = {c}\n", .{self.ipo_quotation_release_qualifier}); // Must be A or C
+        
+        // FIXME: return a enum, instead of this shit 
+        if (self.ipo_quotation_release_qualifier != 'A' and self.ipo_quotation_release_qualifier != 'C') {
+            std.debug.print("  WARNING: Invalid ipo_quotation_release_qualifier: {d} (expected 'A' or 'C')\n", .{self.ipo_quotation_release_qualifier});
+        }
+
+        // std.debug.print("  ipo_quotation_release_qualifier = {c}\n", .{self.ipo_quotation_release_qualifier}); // Must be A or C
         std.debug.print("  ipo_price = {d}\n", .{self.ipo_price});
         std.debug.print("}}\n\n", .{});
     }
