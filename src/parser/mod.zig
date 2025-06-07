@@ -3,7 +3,9 @@ const ITCHMessage = structs.ITCHMessage;
 const utils = @import("utils.zig");
 const std = @import("std");
 
-pub fn parseITCHMessage(msg_type: u8, payload: []const u8) ITCHMessage {
+pub fn parseITCHMessage(msg_type: u8, full_message: []const u8) ITCHMessage {
+    const payload = full_message[1..];
+    
     return switch (msg_type) {
         'S' => ITCHMessage { .SystemEventMessage = structs.SystemEventMessage.initFromBytes(payload) }, 
         'R' => ITCHMessage { .StockDirectoryMessage = structs.StockDirectoryMessage.initFromBytes(payload) },
@@ -13,7 +15,7 @@ pub fn parseITCHMessage(msg_type: u8, payload: []const u8) ITCHMessage {
         'V' => ITCHMessage { .MWCBDeclineLevelMessage = structs.MWCBDeclineLevelMessage.initFromBytes(payload) },
         'W' => ITCHMessage { .MWCBStatusMessage = structs.MWCBStatusMessage.initFromBytes(payload) },
         'K' => ITCHMessage { .QuotingPeriodUpdateMessage = structs.QuotingPeriodUpdateMessage.initFromBytes(payload) },
-        'J' => ITCHMessage {  .LULDAuctionCollarMessage = structs.LULDAuctionCollarMessage.initFromBytes(payload) },
+        'J' => ITCHMessage { .LULDAuctionCollarMessage = structs.LULDAuctionCollarMessage.initFromBytes(payload) },
         'h' => ITCHMessage { .OperationalHaltMessage = structs.OperationalHaltMessage.initFromBytes(payload) },
         'A' => ITCHMessage { .AddOrderNoMPIDMessage = structs.AddOrderNoMPIDMessage.initFromBytes(payload) },
         'F' => ITCHMessage { .AddOrderWithMPIDMessage = structs.AddOrderWithMPIDMessage.initFromBytes(payload) },
@@ -28,7 +30,7 @@ pub fn parseITCHMessage(msg_type: u8, payload: []const u8) ITCHMessage {
         'I' => ITCHMessage { .NOIIMessage = structs.NOIIMessage.initFromBytes(payload) },
         'N' => ITCHMessage { .DirectListingWithCapitalRaisePriceMessage = structs.DirectListingWithCapitalRaisePriceMessage.initFromBytes(payload) },
         else => {
-            std.debug.print("Unknown message type: {}\n", .{msg_type});
+            std.debug.print("Unknown message type: {c} (0x{X})\n", .{msg_type, msg_type});
             unreachable;
         },
     }; 
@@ -46,7 +48,7 @@ pub fn getMessageLength(msg_type: u8) u32 {
         'K' => 20,
         'J' => 35,
         'h' => 21,
-        'A' => 23,
+        'A' => 36,
         'F' => 40,
         'E' => 31,
         'C' => 36,
@@ -59,7 +61,7 @@ pub fn getMessageLength(msg_type: u8) u32 {
         'I' => 50,
         'N' => 48,
         else => {
-            std.debug.print("Unknown message type: {}\n", .{msg_type});
+            std.debug.print("Unknown message type: {c} (0x{X})\n", .{msg_type, msg_type});
             unreachable;
         },
     }; 
