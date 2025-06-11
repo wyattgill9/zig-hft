@@ -107,3 +107,16 @@ pub fn printMarketParticipantState(code: u8) []const u8 {
         else => "Unknown Market Participant State Code",
     };
 }
+
+// fn toJson(comptime T: type, value: T, writer: anytype) !void {
+//     try writer.writeByte('{');
+//
+//     const fields = @typeInfo(T).Struct.fields;
+//     inline for (fields) |field, i {
+//         if (i != 0) try writer.writeByte(',');
+//         try std.fmt.format(writer, "\"{}\":", .{field.name});
+//         try std.json.stringify(@field(value, field.name), .{}, writer);
+//     }
+//
+//     try writer.writeByte('}');
+// }
