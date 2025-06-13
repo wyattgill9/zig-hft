@@ -141,7 +141,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             if (self.findNode(key)) |node| {
                 return &node.value;
             } else {
-                const value: V = std.mem.zeroInit;
+                const value = if (V == []const u8) "" else std.mem.zeroes(V);
                 try self.insert(key, value);
                 return &self.findNode(key).?.value;
             }
