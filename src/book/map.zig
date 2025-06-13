@@ -3,6 +3,7 @@ const print = std.debug.print;
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const testing = std.testing;
+const order = @import("./book.zig").Order;
 
 const Color = enum {
     Red,
@@ -140,8 +141,8 @@ pub fn Map(comptime K: type, comptime V: type) type {
             if (self.findNode(key)) |node| {
                 return &node.value;
             } else {
-                const default_value = if (V == []const u8) "" else std.mem.zeroes(V);
-                try self.insert(key, default_value);
+                const value: V = std.mem.zeroInit;
+                try self.insert(key, value);
                 return &self.findNode(key).?.value;
             }
         }
@@ -372,7 +373,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             
             self.allocator.destroy(z);
         }
-        
+      
         fn transplant(self: *Self, u: *Node, v: ?*Node) void {
             if (u.parent == null) {
                 self.root = v;

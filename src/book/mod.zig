@@ -1,89 +1,36 @@
 const std = @import("std");
+const Order = @import("./book.zig").Order;
+const OrderBook = @import("./book.zig").OrderBook;
+const OrderQueue = @import("./book.zig").OrderQueue;
 
-const Price = f64;
-const Quantity = u64;
-const OrderId = u64;
-const Timestamp = u64;
-const SequenceNumber = u64;
+pub fn main() !void {
+    const allocator = std.heap.page_allocator;
+    var ob = OrderBook.init(allocator);
+    // defer ob.deinit();
 
-const Side = enum(u8) {
-    bid = 0,
-    ask = 1,
-};
+    const o1 = Order.init(1, 100.0, 10, .bid, 12345678);
+    const o2 = Order.init(2, 100.0, 5, .bid, 12345679);
+    const o3 = Order.init(3, 101.0, 7, .ask, 12345680);
+    const o4 = Order.init(4, 101.0, 3, .ask, 12345681);
 
-const Color = enum(u8) {
-    red, 
-    black,
-};
+    try ob.addLimitOrder(allocator, o1);
+    try ob.addLimitOrder(allocator, o2);
+    try ob.addLimitOrder(allocator, o3);
+    try ob.addLimitOrder(allocator, o4);
 
-const Order = struct {
-    order_id: OrderId,
-    price: Price,
-    quantity: Quantity,
-    side: Side,
-    timestamp: Timestamp,
-    next_order: ?*Order,
-    prev_order: ?*Order,
+    const bid = ob.popFrontAtPrice(100.0, .bid);
+    const ask = ob.popFrontAtPrice(101.0, .ask);
 
-    fn init(order_id: OrderId, price: Price, quantity: Quantity, side: Side, timestamp: Timestamp) Order {
-        return Order{
-            .order_id = order_id,
-            .price = price,
-            .quantity = quantity,
-            .side = side,
-            .timestamp = timestamp,
-            .next_order = null,
-            .prev_order = null,
-        };
+    if (bid) |b| {
+        std.debug.print("Popped BID order: id={}, qty={}\n", .{ b.order_id, b.quantity });
+    } else {
+        std.debug.print("No BID order at 100.0\n", .{});
     }
-};
 
-const PriceLevel = struct {
-    price: Price,
-    total_quantity: Quantity,
-    order_count: u32,
-    first_order: ?*Order,
-    last_order: ?*Order,
-    parent: ?*PriceLevel,
-    left: ?*PriceLevel,
-    right: ?*PriceLevel,
-    color: Color,
-
-    fn init(price: Price) PriceLevel {
-        return PriceLevel{
-            .price = price,
-            .total_quantity = 0,
-            .order_count = 0,
-            .first_order = null,
-            .last_order = null,
-            .parent = null,
-            .left = null,
-            .right = null,
-            .color = .red,
-        };
+    if (ask) |a| {
+        std.debug.print("Popped ASK order: id={}, qty={}\n", .{ a.order_id, a.quantity });
+    } else {
+        std.debug.print("No ASK order at 101.0\n", .{});
     }
-};
+}
 
-const Book = struct {
-    symbol: [8]u8,
-    bid_tree: ?*PriceLevel,
-    ask_tree: ?*PriceLevel,
-    bid_top: ?*PriceLevel,
-    ask_top: ?*PriceLevel,
-    last_trade_price: Price,
-    sequence_number: SequenceNumber,
-    order_map: std.HashMap(OrderId, *Order, std.hash_map.DefaultContext(OrderId), std.hash_map.default_max_load_percentage),
-
-    fn init(allocator: std.mem.Allocator, symbol: []const u8) Book {
-        return Book {
-            .symbol = symbol, 
-            .bid_tree = null,
-            .ask_tree = null,
-            .bid_top = null,
-            .ask_top = null,
-            .last_trade_price = 0,
-            .sequence_number = 0,
-            .order_map = std.HashMap(OrderId, *Order, std.hash_map.DefaultContext(OrderId), std.hash_map.default_max_load_percentage).init(allocator),
-        };
-    }
-};
