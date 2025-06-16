@@ -83,7 +83,7 @@ const OrderQueue = struct {
         if (self.head) |h| {
             h.prev = null;
         } else {
-            // List became empty
+            // list became empty
             self.tail = null;
         }
         _ = self.order_map.remove(order.order_id);
@@ -127,16 +127,16 @@ pub const OrderBook = struct {
 
     pub fn deinit(self: *OrderBook) void {
         {
-            var it = self.bids.mutIterator();
+            var it = self.bids.iterator();
             while (it.next()) |entry| {
                 entry.value.*.deinit();
-                self.allocator.destroy(entry.value);
+                self.allocator.destroy(entry.value); 
             }
         }
         self.bids.deinit();
 
         {
-            var it = self.asks.mutIterator();
+            var it = self.asks.iterator();
             while (it.next()) |entry| {
                 entry.value.*.deinit();
                 self.allocator.destroy(entry.value);
@@ -174,11 +174,7 @@ pub const OrderBook = struct {
         }
         var queue_ptr = book.get(price) orelse return null; 
         const result = queue_ptr.popFront();
-        if (queue_ptr.head == null) {
-            _ = book.erase(price);
-            queue_ptr.deinit();
-            self.allocator.destroy(queue_ptr); 
-        }
+
         return result;
     }
 
