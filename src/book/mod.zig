@@ -1,12 +1,14 @@
 const std = @import("std");
 const Order = @import("./book.zig").Order;
 const OrderBook = @import("./book.zig").OrderBook;
-const OrderQueue = @import("./book.zig").OrderQueue;
 
 pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-    var ob = OrderBook.init(allocator);
-    // defer ob.deinit();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var ob =  OrderBook.init(allocator);
+    defer ob.deinit();
 
     const o1 = Order.init(1, 100.0, 10, .bid, 12345678);
     const o2 = Order.init(2, 100.0, 5, .bid, 12345679);
@@ -18,8 +20,8 @@ pub fn main() !void {
     try ob.addLimitOrder(allocator, o3);
     try ob.addLimitOrder(allocator, o4);
 
-    const bid = ob.popFrontAtPrice(100.0, .bid);
-    const ask = ob.popFrontAtPrice(101.0, .ask);
+    const bid = ob.popFrontAtPrice(allocator, 100.0, .bid);
+    const ask = ob.popFrontAtPrice(allocator, 101.0, .ask);
 
     if (bid) |b| {
         std.debug.print("Popped BID order: id={}, qty={}\n", .{ b.order_id, b.quantity });
@@ -33,4 +35,3 @@ pub fn main() !void {
         std.debug.print("No ASK order at 101.0\n", .{});
     }
 }
-

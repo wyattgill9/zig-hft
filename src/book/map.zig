@@ -137,12 +137,11 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
         }
         
-        pub fn getOrPut(self: *Self, key: K) !*V {
+        pub fn getOrPut(self: *Self, key: K, default: V) !*V {
             if (self.findNode(key)) |node| {
                 return &node.value;
             } else {
-                const value = if (V == []const u8) "" else std.mem.zeroes(V);
-                try self.insert(key, value);
+                try self.insert(key, default);
                 return &self.findNode(key).?.value;
             }
         }

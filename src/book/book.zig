@@ -24,7 +24,15 @@ pub const Order = struct {
     }
 };
 
-// FIFO queue per price level
+
+const Node = struct {
+    order: Order,
+    prev: ?*Node,
+    next: ?*Node,
+};
+
+
+// TODO: Make doubly linked list with hashmap for O(1) deletion
 const OrderQueue = std.fifo.LinearFifo(Order, .Dynamic);
 
 pub const OrderBook = struct {
@@ -43,20 +51,25 @@ pub const OrderBook = struct {
             .asks = Map(f64, OrderQueue).init(allocator),
         };
     }
+    
+    pub fn deinit(self: *OrderBook) void {
+        // For each price level, deinit its queue.
+        {
+            var it = self.bids.iterator();
+            while (it.next()) |entry| {
+                entry.value.deinit();
+            }
+        }
+        self.bids.deinit();
 
-    // pub fn deinit(self: *OrderBook) void {
-    //     var it = self.bids.iterator();
-    //     while (it.next()) |entry| {
-    //         entry.value_ptr.*.deinit(); // deinit OrderQueue
-    //     }
-    //     self.bids.deinit();
-    //
-    //     it = self.asks.iterator();
-    //     while (it.next()) |entry| {
-    //         entry.value_ptr.*.deinit();
-    //     }
-    //     self.asks.deinit();
-    // }
+        {
+            var it = self.asks.iterator();
+            while (it.next()) |entry| {
+                entry.value.deinit();
+            }
+        }
+        self.asks.deinit();
+    }
     
     pub fn addLimitOrder(self: *OrderBook, allocator: std.mem.Allocator, order: Order) !void {
         const book = switch (order.side) {
@@ -64,20 +77,17 @@ pub const OrderBook = struct {
             .ask => &self.asks,
         };
 
-        // Check if price level already exists
         if (book.contains(order.price)) {
-            // Get pointer to existing queue and add order
-            const queue_ptr = try book.getOrPut(order.price);
+            const queue_ptr = try book.getOrPut(order.price, OrderQueue.init(allocator));
             try queue_ptr.writeItem(order);
         } else {
-            // Create new queue, add order, then insert into map
             var new_queue = OrderQueue.init(allocator);
             try new_queue.writeItem(order);
             try book.insert(order.price, new_queue);
         }
     }
 
-     pub fn popFrontAtPrice(self: *OrderBook, price: f64, side: Side) ?Order {
+    pub fn popFrontAtPrice(self: *OrderBook, allocator: std.mem.Allocator, price: f64, side: Side) ?Order {
         const book = switch (side) {
             .bid => &self.bids,
             .ask => &self.asks,
@@ -87,7 +97,7 @@ pub const OrderBook = struct {
             return null;
         }
         
-        const queue_ptr = book.getOrPut(price) catch return null;
+        const queue_ptr = book.getOrPut(price, OrderQueue.init(allocator)) catch return null;
         return queue_ptr.readItem();
     }   
 };
