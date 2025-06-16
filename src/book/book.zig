@@ -24,80 +24,171 @@ pub const Order = struct {
     }
 };
 
-
 const Node = struct {
     order: Order,
     prev: ?*Node,
     next: ?*Node,
 };
 
+const OrderQueue = struct {
+    allocator: std.mem.Allocator,
+    head: ?*Node = null,
+    tail: ?*Node = null,
+    order_map: std.AutoHashMap(u64, *Node),
 
-// TODO: Make doubly linked list with hashmap for O(1) deletion
-const OrderQueue = std.fifo.LinearFifo(Order, .Dynamic);
+    pub fn init(allocator: std.mem.Allocator) OrderQueue {
+        return OrderQueue {
+            .allocator = allocator,
+            .order_map = std.AutoHashMap(u64, *Node).init(allocator),
+        };
+    }
+
+    pub fn deinit(self: *OrderQueue) void {
+        var node = self.head;
+        while (node) |n| {
+            const next = n.next;
+            self.allocator.destroy(n);
+            node = next;
+        }
+        self.order_map.deinit();
+        self.head = null;
+        self.tail = null;
+    }
+
+    pub fn append(self: *OrderQueue, order: Order) !void {
+        const node = try self.allocator.create(Node);
+        node.* = Node{
+            .order = order,
+            .prev = self.tail,
+            .next = null,
+        };
+
+        if (self.tail) |tail| {
+            tail.next = node;
+        } else {
+            // List was empty
+            self.head = node;
+        }
+        self.tail = node;
+
+        try self.order_map.put(order.order_id, node);
+    }
+
+    pub fn popFront(self: *OrderQueue) ?Order {
+        if (self.head == null) return null;
+
+        const node = self.head.?;
+        const order = node.order;
+        self.head = node.next;
+        if (self.head) |h| {
+            h.prev = null;
+        } else {
+            // List became empty
+            self.tail = null;
+        }
+        _ = self.order_map.remove(order.order_id);
+        self.allocator.destroy(node);
+        return order;
+    }
+
+    pub fn removeById(self: *OrderQueue, order_id: u64) !bool {
+        if (!self.order_map.contains(order_id)) return false;
+        const node = self.order_map.get(order_id).?;
+
+        if (node.prev) |prev| {
+            prev.next = node.next;
+        } else {
+            self.head = node.next;
+        }
+        if (node.next) |next| {
+            next.prev = node.prev;
+        } else {
+            self.tail = node.prev;
+        }
+        _ = self.order_map.remove(order_id);
+        self.allocator.destroy(node);
+        return true;
+    }
+
+};
 
 pub const OrderBook = struct {
-    bids: Map(f64, OrderQueue),  // TODO: make descending price
-    asks: Map(f64, OrderQueue),  // ascending price
-
-    // sequence_number: u32 = 0,
-    // last_trade_price: f32 = 0.0,
-    // last_trade_size: u32 = 0,
-    // best_bid: f32 = 0.0,
-    // best_ask: f32 = 0.0,
+    allocator: std.mem.Allocator,
+    bids: Map(f64, *OrderQueue),  // TODO: make descending price
+    asks: Map(f64, *OrderQueue),  // ascending price
 
     pub fn init(allocator: std.mem.Allocator) OrderBook {
         return OrderBook{
-            .bids = Map(f64, OrderQueue).init(allocator), // TODO: make descending price possible
-            .asks = Map(f64, OrderQueue).init(allocator),
+            .allocator = allocator,
+            .bids = Map(f64, *OrderQueue).init(allocator),
+            .asks = Map(f64, *OrderQueue).init(allocator),
         };
     }
-    
+
     pub fn deinit(self: *OrderBook) void {
-        // For each price level, deinit its queue.
         {
-            var it = self.bids.iterator();
+            var it = self.bids.mutIterator();
             while (it.next()) |entry| {
-                entry.value.deinit();
+                entry.value.*.deinit();
+                self.allocator.destroy(entry.value);
             }
         }
         self.bids.deinit();
 
         {
-            var it = self.asks.iterator();
+            var it = self.asks.mutIterator();
             while (it.next()) |entry| {
-                entry.value.deinit();
+                entry.value.*.deinit();
+                self.allocator.destroy(entry.value);
             }
         }
         self.asks.deinit();
     }
-    
-    pub fn addLimitOrder(self: *OrderBook, allocator: std.mem.Allocator, order: Order) !void {
+
+
+    pub fn addLimitOrder(self: *OrderBook, order: Order) !void {
         const book = switch (order.side) {
             .bid => &self.bids,
             .ask => &self.asks,
         };
 
         if (book.contains(order.price)) {
-            const queue_ptr = try book.getOrPut(order.price, OrderQueue.init(allocator));
-            try queue_ptr.writeItem(order);
+            var queue_ptr = book.get(order.price) orelse unreachable;
+            try queue_ptr.append(order);
         } else {
-            var new_queue = OrderQueue.init(allocator);
-            try new_queue.writeItem(order);
+            var new_queue = try self.allocator.create(OrderQueue);
+            new_queue.* = OrderQueue.init(self.allocator); // same allocator in each queue
+            try new_queue.append(order);
             try book.insert(order.price, new_queue);
         }
     }
 
-    pub fn popFrontAtPrice(self: *OrderBook, allocator: std.mem.Allocator, price: f64, side: Side) ?Order {
+    pub fn popFrontAtPrice(self: *OrderBook, price: f64, side: Side) ?Order {
         const book = switch (side) {
             .bid => &self.bids,
             .ask => &self.asks,
         };
-        
+
         if (!book.contains(price)) {
             return null;
         }
-        
-        const queue_ptr = book.getOrPut(price, OrderQueue.init(allocator)) catch return null;
-        return queue_ptr.readItem();
-    }   
+        var queue_ptr = book.get(price) orelse return null; 
+        const result = queue_ptr.popFront();
+        if (queue_ptr.head == null) {
+            _ = book.erase(price);
+            queue_ptr.deinit();
+            self.allocator.destroy(queue_ptr); 
+        }
+        return result;
+    }
+
+    pub fn removeOrderById(self: *OrderBook, order_id: u64, price: f64, side: Side) !bool {
+        const book = switch (side) {
+            .bid => &self.bids,
+            .ask => &self.asks,
+        };
+        if (!book.contains(price)) return false;
+        var queue_ptr = book.get(price) catch return false;
+        return try queue_ptr.removeById(order_id);
+    }
 };

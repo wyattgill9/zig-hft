@@ -55,6 +55,28 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
         };
         
+        pub const MutEntry = struct {
+            key: K,
+            value: *V,
+        };
+
+        pub const MutIterator = struct {
+            current: ?*Node,
+
+            pub fn next(self: *MutIterator) ?MutEntry {
+                if (self.current) |node| {
+                    const entry = MutEntry{ .key = node.key, .value = &node.value };
+                    self.current = successor(node);
+                    return entry;
+                }
+                return null;
+            }
+        };
+
+        pub fn mutIterator(self: *Self) MutIterator {
+            return MutIterator{ .current = self.minimum(self.root) };
+        }
+        
         allocator: Allocator,
         root: ?*Node,
         node_count: usize,

@@ -7,7 +7,7 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var ob =  OrderBook.init(allocator);
+    var ob = OrderBook.init(allocator);
     defer ob.deinit();
 
     const o1 = Order.init(1, 100.0, 10, .bid, 12345678);
@@ -15,13 +15,14 @@ pub fn main() !void {
     const o3 = Order.init(3, 101.0, 7, .ask, 12345680);
     const o4 = Order.init(4, 101.0, 3, .ask, 12345681);
 
-    try ob.addLimitOrder(allocator, o1);
-    try ob.addLimitOrder(allocator, o2);
-    try ob.addLimitOrder(allocator, o3);
-    try ob.addLimitOrder(allocator, o4);
+    try ob.addLimitOrder(o1);
+    try ob.addLimitOrder(o2);
+    try ob.addLimitOrder(o3);
+    try ob.addLimitOrder(o4);
 
-    const bid = ob.popFrontAtPrice(allocator, 100.0, .bid);
-    const ask = ob.popFrontAtPrice(allocator, 101.0, .ask);
+    const bid = ob.popFrontAtPrice(100.0, .bid);
+
+    const ask = ob.popFrontAtPrice(101.0, .ask);
 
     if (bid) |b| {
         std.debug.print("Popped BID order: id={}, qty={}\n", .{ b.order_id, b.quantity });
