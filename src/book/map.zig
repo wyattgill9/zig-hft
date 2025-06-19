@@ -3,7 +3,6 @@ const print = std.debug.print;
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const testing = std.testing;
-const order = @import("./book.zig").Order;
 
 const Color = enum {
     Red,

@@ -1,6 +1,6 @@
 const std = @import("std");
-const Order = @import("./book.zig").Order;
-const OrderBook = @import("./book.zig").OrderBook;
+const Order = @import("./order.zig").Order;
+const OrderBook = @import("./orderbook.zig").OrderBook;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

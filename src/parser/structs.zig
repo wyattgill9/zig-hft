@@ -39,18 +39,15 @@ pub const ITCHMessage = union(enum) {
     }
 };
 
-const MessageHeader = struct {
+pub const MessageHeader = packed struct {
     stock_locate: u16,
     tracking_number: u16,
-    timestamp: [6]u8,
-
+    timestamp: u48,
+    
     pub fn initFromBytes(payload: []const u8) MessageHeader {
-        return MessageHeader {
-            .stock_locate = utils.readU16(payload, 0),
-            .tracking_number = utils.readU16(payload, 2),
-            .timestamp = payload[4..10].*, 
-        };        
-    }    
+        // std.debug.assert(payload.len >= @sizeOf(MessageHeader));
+        return std.mem.bytesToValue(MessageHeader, payload.ptr);
+    }
 
     pub fn printInfo(self: MessageHeader) void {
         std.debug.print("  stock_locate = {d}\n", .{self.stock_locate});
