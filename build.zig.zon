@@ -7,8 +7,7 @@
 
     .minimum_zig_version = "0.14.0",
 
-    .dependencies = .{
-    },
+    .dependencies = .{},
 
     .paths = .{
         "build.zig",

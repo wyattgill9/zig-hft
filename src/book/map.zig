@@ -13,7 +13,7 @@ const Color = enum {
 pub fn Map(comptime K: type, comptime V: type) type {
     return struct {
         const Self = @This();
-        
+
         const Node = struct {
             key: K,
             value: V,
@@ -21,7 +21,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             left: ?*Node,
             right: ?*Node,
             parent: ?*Node,
-            
+
             fn init(allocator: Allocator, key: K, value: V) !*Node {
                 const node = try allocator.create(Node);
                 node.* = Node{
@@ -35,15 +35,15 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 return node;
             }
         };
-        
+
         pub const Entry = struct {
             key: K,
             value: V,
         };
-        
+
         pub const Iterator = struct {
             current: ?*Node,
-            
+
             pub fn next(self: *Iterator) ?Entry {
                 if (self.current) |node| {
                     const entry = Entry{ .key = node.key, .value = node.value };
@@ -53,11 +53,11 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 return null;
             }
         };
-        
+
         allocator: Allocator,
         root: ?*Node,
         node_count: usize,
-        
+
         pub fn init(allocator: Allocator) Self {
             return Self{
                 .allocator = allocator,
@@ -65,11 +65,11 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 .node_count = 0,
             };
         }
-        
+
         pub fn deinit(self: *Self) void {
             self.clear();
         }
-        
+
         pub fn clear(self: *Self) void {
             if (self.root) |root| {
                 self.destroySubtree(root);
@@ -77,7 +77,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 self.node_count = 0;
             }
         }
-        
+
         fn destroySubtree(self: *Self, node: *Node) void {
             if (node.left) |left| {
                 self.destroySubtree(left);
@@ -87,15 +87,15 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
             self.allocator.destroy(node);
         }
-        
+
         pub fn empty(self: *const Self) bool {
             return self.node_count == 0;
         }
-        
+
         pub fn size(self: *const Self) usize {
             return self.node_count;
         }
-        
+
         pub fn insert(self: *Self, key: K, value: V) !void {
             if (self.root == null) {
                 self.root = try Node.init(self.allocator, key, value);
@@ -103,10 +103,10 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 self.node_count = 1;
                 return;
             }
-            
+
             var current = self.root.?;
             var parent: ?*Node = null;
-            
+
             while (true) {
                 parent = current;
                 if (self.compare(key, current.key) < 0) {
@@ -135,7 +135,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 }
             }
         }
-        
+
         pub fn getOrPut(self: *Self, key: K, default: V) !*V {
             if (self.findNode(key)) |node| {
                 return &node.value;
@@ -144,22 +144,22 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 return &self.findNode(key).?.value;
             }
         }
-        
+
         pub fn get(self: *const Self, key: K) ?V {
             if (self.findNode(key)) |node| {
                 return node.value;
             }
             return null;
         }
-        
+
         pub fn contains(self: *const Self, key: K) bool {
             return self.findNode(key) != null;
         }
-        
+
         pub fn count(self: *const Self, key: K) usize {
             return if (self.contains(key)) 1 else 0;
         }
-        
+
         pub fn erase(self: *Self, key: K) bool {
             if (self.findNode(key)) |node| {
                 self.deleteNode(node);
@@ -168,14 +168,14 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
             return false;
         }
-        
+
         pub fn iterator(self: *const Self) Iterator {
             return Iterator{ .current = self.minimum(self.root) };
         }
-        
+
         fn compare(self: *const Self, a: K, b: K) i32 {
             _ = self;
-            
+
             switch (@typeInfo(K)) {
                 .int, .float => {
                     if (a < b) return -1;
@@ -211,8 +211,8 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 },
                 else => @compileError("Unsupported key type for Map: " ++ @typeName(K)),
             }
-        }        
-       
+        }
+
         fn findNode(self: *const Self, key: K) ?*Node {
             var current = self.root;
             while (current) |node| {
@@ -227,7 +227,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
             return null;
         }
-        
+
         fn minimum(self: *const Self, node: ?*Node) ?*Node {
             _ = self;
             var current = node;
@@ -240,7 +240,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
             return current;
         }
-        
+
         fn successor(node: *Node) ?*Node {
             if (node.right) |right| {
                 var current = right;
@@ -249,7 +249,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 }
                 return current;
             }
-            
+
             var current: ?*Node = node;
             var parent = node.parent;
             while (parent != null and current == parent.?.right) {
@@ -258,7 +258,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
             return parent;
         }
-        
+
         fn insertFixup(self: *Self, node: *Node) void {
             var z = node;
             while (z.parent != null and z.parent.?.color == Color.Red) {
@@ -298,7 +298,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             }
             self.root.?.color = Color.Black;
         }
-        
+
         fn leftRotate(self: *Self, x: *Node) void {
             const y = x.right.?;
             x.right = y.left;
@@ -316,7 +316,7 @@ pub fn Map(comptime K: type, comptime V: type) type {
             y.left = x;
             x.parent = y;
         }
-        
+
         fn rightRotate(self: *Self, x: *Node) void {
             const y = x.left.?;
             x.left = y.right;
@@ -334,12 +334,12 @@ pub fn Map(comptime K: type, comptime V: type) type {
             y.right = x;
             x.parent = y;
         }
-        
+
         fn deleteNode(self: *Self, z: *Node) void {
             var y = z;
             var y_original_color = y.color;
             var x: ?*Node = null;
-            
+
             if (z.left == null) {
                 x = z.right;
                 self.transplant(z, z.right);
@@ -364,14 +364,14 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 y.left.?.parent = y;
                 y.color = z.color;
             }
-            
+
             if (y_original_color == Color.Black) {
                 self.deleteFixup(x);
             }
-            
+
             self.allocator.destroy(z);
         }
-      
+
         fn transplant(self: *Self, u: *Node, v: ?*Node) void {
             if (u.parent == null) {
                 self.root = v;
@@ -384,17 +384,17 @@ pub fn Map(comptime K: type, comptime V: type) type {
                 node.parent = u.parent;
             }
         }
-        
+
         fn deleteFixup(self: *Self, x: ?*Node) void {
             var node = x;
-            var x_parent: ?*Node = null; 
+            var x_parent: ?*Node = null;
 
             if (node) |n| {
-                x_parent = n.parent; 
+                x_parent = n.parent;
             }
-            
+
             while (node != self.root and (node == null or node.?.color == Color.Black)) {
-                const parent = if (node) |n| n.parent else x_parent; 
+                const parent = if (node) |n| n.parent else x_parent;
 
                 if (parent == null) break;
 
@@ -406,8 +406,9 @@ pub fn Map(comptime K: type, comptime V: type) type {
                         self.leftRotate(node.?.parent.?);
                         w = node.?.parent.?.right.?;
                     }
-                    if ((w.left == null or w.left.?.color == Color.Black) and 
-                        (w.right == null or w.right.?.color == Color.Black)) {
+                    if ((w.left == null or w.left.?.color == Color.Black) and
+                        (w.right == null or w.right.?.color == Color.Black))
+                    {
                         w.color = Color.Red;
                         node = node.?.parent;
                     } else {
@@ -435,8 +436,9 @@ pub fn Map(comptime K: type, comptime V: type) type {
                         self.rightRotate(node.?.parent.?);
                         w = node.?.parent.?.left.?;
                     }
-                    if ((w.right == null or w.right.?.color == Color.Black) and 
-                        (w.left == null or w.left.?.color == Color.Black)) {
+                    if ((w.right == null or w.right.?.color == Color.Black) and
+                        (w.left == null or w.left.?.color == Color.Black))
+                    {
                         w.color = Color.Red;
                         node = node.?.parent;
                     } else {
@@ -495,7 +497,7 @@ test "Map single insertion and retrieval" {
     defer map.deinit();
 
     try map.insert("hello", 42);
-    
+
     try testing.expect(!map.empty());
     try testing.expectEqual(@as(usize, 1), map.size());
     try testing.expect(map.contains("hello"));
@@ -570,17 +572,17 @@ test "Map erase functionality" {
     try map.insert("c", 3);
 
     try testing.expectEqual(@as(usize, 3), map.size());
-    
+
     // Erase existing key
     try testing.expect(map.erase("b"));
     try testing.expectEqual(@as(usize, 2), map.size());
     try testing.expect(!map.contains("b"));
     try testing.expect(map.get("b") == null);
-    
+
     // Try to erase non-existent key
     try testing.expect(!map.erase("nonexistent"));
     try testing.expectEqual(@as(usize, 2), map.size());
-    
+
     // Remaining keys should still exist
     try testing.expect(map.contains("a"));
     try testing.expect(map.contains("c"));
@@ -700,7 +702,7 @@ test "Map stress test - many insertions" {
     defer map.deinit();
 
     const num_elements = 1000;
-    
+
     // Insert many elements
     for (0..num_elements) |i| {
         try map.insert(@intCast(i), @intCast(i * 2));
@@ -726,7 +728,7 @@ test "Map stress test - insertions and deletions" {
     defer map.deinit();
 
     const num_elements = 500;
-    
+
     // Insert elements
     for (0..num_elements) |i| {
         try map.insert(@intCast(i), @intCast(i));
@@ -869,18 +871,18 @@ test "Map sequential operations" {
     // Sequential insert, get, erase pattern
     try map.insert("first", 1);
     try testing.expectEqual(@as(i32, 1), map.get("first").?);
-    
+
     try map.insert("second", 2);
     try testing.expectEqual(@as(usize, 2), map.size());
-    
+
     try testing.expect(map.erase("first"));
     try testing.expectEqual(@as(usize, 1), map.size());
     try testing.expect(!map.contains("first"));
     try testing.expect(map.contains("second"));
-    
+
     map.clear();
     try testing.expect(map.empty());
-    
+
     // Re-insert after clear
     try map.insert("new", 100);
     try testing.expectEqual(@as(usize, 1), map.size());

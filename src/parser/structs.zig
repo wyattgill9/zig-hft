@@ -25,6 +25,7 @@ pub const ITCHMessage = union(enum) {
     TradeMessage: TradeMessage,
     CrossTradeMessage: CrossTradeMessage,
     BrokenTradeMessage: BrokenTradeMessage,
+
     NOIIMessage: NOIIMessage,
     DirectListingWithCapitalRaisePriceMessage: DirectListingWithCapitalRaisePriceMessage,
 
@@ -43,9 +44,8 @@ pub const MessageHeader = packed struct {
     stock_locate: u16,
     tracking_number: u16,
     timestamp: u48,
-    
+
     pub fn initFromBytes(payload: []const u8) MessageHeader {
-        // std.debug.assert(payload.len >= @sizeOf(MessageHeader));
         return std.mem.bytesToValue(MessageHeader, payload.ptr);
     }
 
@@ -61,9 +61,10 @@ pub const SystemEventMessage = struct {
     event_code: u8,
 
     pub fn initFromBytes(payload: []const u8) SystemEventMessage {
-        return SystemEventMessage {
+        return SystemEventMessage{
             .header = MessageHeader.initFromBytes(payload),
-            .event_code = utils.readU8(payload, 10),};
+            .event_code = utils.readU8(payload, 10),
+        };
     }
 
     pub fn printInfo(self: SystemEventMessage) void {
@@ -85,27 +86,26 @@ pub const SystemEventMessage = struct {
     }
 };
 
-
 pub const StockDirectoryMessage = struct {
-    header: MessageHeader,                       // 0-9 
-    stock: [8]u8,                                // 11-18
-    market_category: u8,                         // 19
-    financial_status_indicator: u8,              // 20
-    round_lot_size: u32,                         // 21-24
-    round_lots_only: u8,                         // 25
-    issue_classification: u8,                    // 26
-    issue_sub_type: [2]u8,                       // 27-28
-    authenticity: u8,                            // 29
-    short_sale_threshold_indicator: u8,          // 30
-    ipo_flag: u8,                                // 31
-    luld_reference_price_tier: u8,               // 32
-    etp_flag: u8,                                // 33
-    etp_leverage_factor: u32,                    // 34-37
-    inverse_indicator: u8,                       // 38
+    header: MessageHeader, // 0-9
+    stock: [8]u8, // 11-18
+    market_category: u8, // 19
+    financial_status_indicator: u8, // 20
+    round_lot_size: u32, // 21-24
+    round_lots_only: u8, // 25
+    issue_classification: u8, // 26
+    issue_sub_type: [2]u8, // 27-28
+    authenticity: u8, // 29
+    short_sale_threshold_indicator: u8, // 30
+    ipo_flag: u8, // 31
+    luld_reference_price_tier: u8, // 32
+    etp_flag: u8, // 33
+    etp_leverage_factor: u32, // 34-37
+    inverse_indicator: u8, // 38
 
     pub fn initFromBytes(payload: []const u8) StockDirectoryMessage {
         return StockDirectoryMessage{
-            .header = MessageHeader.initFromBytes(payload), 
+            .header = MessageHeader.initFromBytes(payload),
             .stock = payload[10..18].*,
             .market_category = utils.readU8(payload, 18),
             .financial_status_indicator = utils.readU8(payload, 19),
@@ -119,20 +119,20 @@ pub const StockDirectoryMessage = struct {
             .luld_reference_price_tier = utils.readU8(payload, 31),
             .etp_flag = utils.readU8(payload, 32),
             .etp_leverage_factor = utils.readU32(payload, 33),
-            .inverse_indicator = utils.readU8(payload, 37), 
+            .inverse_indicator = utils.readU8(payload, 37),
         };
     }
 
     pub fn printInfo(self: StockDirectoryMessage) void {
         std.debug.print("StockDirectoryMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  stock = {s}\n", .{self.stock});
         std.debug.print("  market_category = {s}\n", .{utils.printMarketCategory(self.market_category)});
         std.debug.print("  financial_status_indicator = {s}\n", .{utils.printFinancialStatusIndicator(self.financial_status_indicator)});
         std.debug.print("  round_lot_size = {d}\n", .{self.round_lot_size});
         std.debug.print("  round_lots_only = {c}\n", .{self.round_lots_only});
         std.debug.print("  issue_classification = {c}\n", .{self.issue_classification});
-        std.debug.print("  issue_sub_type = {c}{c}\n", .{self.issue_sub_type[0], self.issue_sub_type[1]});
+        std.debug.print("  issue_sub_type = {c}{c}\n", .{ self.issue_sub_type[0], self.issue_sub_type[1] });
         std.debug.print("  authenticity = {c}\n", .{self.authenticity});
         std.debug.print("  short_sale_threshold_indicator = {c}\n", .{self.short_sale_threshold_indicator});
         std.debug.print("  ipo_flag = {c}\n", .{self.ipo_flag});
@@ -145,7 +145,7 @@ pub const StockDirectoryMessage = struct {
 };
 
 pub const StockTradingActionMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     stock: [8]u8,
     trading_state: u8,
     reserved: u8,
@@ -173,12 +173,12 @@ pub const StockTradingActionMessage = struct {
 };
 
 pub const ShortSalePriceTestMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     stock: [8]u8,
     reg_sho_action: u8,
 
     pub fn initFromBytes(payload: []const u8) ShortSalePriceTestMessage {
-        return ShortSalePriceTestMessage {
+        return ShortSalePriceTestMessage{
             .header = MessageHeader.initFromBytes(payload),
             .stock = payload[10..18].*,
             .reg_sho_action = utils.readU8(payload, 18),
@@ -187,7 +187,7 @@ pub const ShortSalePriceTestMessage = struct {
 
     pub fn printInfo(self: ShortSalePriceTestMessage) void {
         std.debug.print("ShortSalePriceTestMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  stock = {s}\n", .{self.stock});
         std.debug.print("  reg_sho_action = {s}\n", .{utils.printRegSHOAction(self.reg_sho_action)});
         std.debug.print("}}\n\n", .{});
@@ -195,7 +195,7 @@ pub const ShortSalePriceTestMessage = struct {
 };
 
 pub const MarketParticipantPositionMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     market_participant_id: [4]u8,
     stock: [8]u8,
     primary_market_maker: u8,
@@ -209,24 +209,24 @@ pub const MarketParticipantPositionMessage = struct {
             .stock = payload[14..22].*,
             .primary_market_maker = utils.readU8(payload, 22),
             .market_maker_mode = utils.readU8(payload, 23),
-            .market_participant_state = utils.readU8(payload, 24), 
+            .market_participant_state = utils.readU8(payload, 24),
         };
     }
 
     pub fn printInfo(self: MarketParticipantPositionMessage) void {
         std.debug.print("MarketParticipantPositionMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  market_participant_id = {s}\n", .{self.market_participant_id});
         std.debug.print("  stock = {s}\n", .{self.stock});
         std.debug.print("  primary_market_maker = {c}\n", .{self.primary_market_maker});
         std.debug.print("  market_maker_mode = {s}\n", .{utils.printMarketMakerMode(self.market_maker_mode)});
         std.debug.print("  market_participant_state = {s}\n", .{utils.printMarketParticipantState(self.market_participant_state)});
-        std.debug.print("}}\n\n", .{});         
-    } 
+        std.debug.print("}}\n\n", .{});
+    }
 };
 
 pub const MWCBDeclineLevelMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     level_one_price: f32,
     level_two_price: f32,
     level_three_price: f32,
@@ -236,13 +236,13 @@ pub const MWCBDeclineLevelMessage = struct {
             .header = MessageHeader.initFromBytes(payload),
             .level_one_price = utils.readF32(payload, 10),
             .level_two_price = utils.readF32(payload, 14),
-            .level_three_price = utils.readF32(payload, 18), 
+            .level_three_price = utils.readF32(payload, 18),
         };
     }
 
     pub fn printInfo(self: MWCBDeclineLevelMessage) void {
         std.debug.print("MWCBDeclineLevelMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  level_one_price = {d}\n", .{self.level_one_price});
         std.debug.print("  level_two_price = {d}\n", .{self.level_two_price});
         std.debug.print("  level_three_price = {d}\n", .{self.level_three_price});
@@ -251,7 +251,7 @@ pub const MWCBDeclineLevelMessage = struct {
 };
 
 pub const MWCBStatusMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     breached_level: u8,
 
     pub fn initFromBytes(payload: []const u8) MWCBStatusMessage {
@@ -263,33 +263,33 @@ pub const MWCBStatusMessage = struct {
 
     pub fn printInfo(self: MWCBStatusMessage) void {
         std.debug.print("MWCBStatusMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  breached_level = {d}\n", .{self.breached_level});
         std.debug.print("}}\n\n", .{});
     }
 };
 
 pub const QuotingPeriodUpdateMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     ipo_quotation_release_time: u32,
     ipo_quotation_release_qualifier: u8,
     ipo_price: f32,
 
     pub fn initFromBytes(payload: []const u8) QuotingPeriodUpdateMessage {
-        return QuotingPeriodUpdateMessage {
+        return QuotingPeriodUpdateMessage{
             .header = MessageHeader.initFromBytes(payload),
             .ipo_quotation_release_time = utils.readU32(payload, 10),
             .ipo_quotation_release_qualifier = utils.readU8(payload, 14),
-            .ipo_price = utils.readF32(payload, 15), 
+            .ipo_price = utils.readF32(payload, 15),
         };
     }
 
     pub fn printInfo(self: QuotingPeriodUpdateMessage) void {
         std.debug.print("QuotingPeriodUpdateMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  ipo_quotation_release_time = {d}\n", .{self.ipo_quotation_release_time});
-        
-        // FIXME: return a enum, instead of this shit 
+
+        // FIXME: return a enum, instead of this shit
         if (self.ipo_quotation_release_qualifier != 'A' and self.ipo_quotation_release_qualifier != 'C') {
             std.debug.print("  WARNING: Invalid ipo_quotation_release_qualifier: {d} (expected 'A' or 'C')\n", .{self.ipo_quotation_release_qualifier});
         }
@@ -301,13 +301,12 @@ pub const QuotingPeriodUpdateMessage = struct {
 };
 
 pub const LULDAuctionCollarMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     stock: [8]u8,
     auction_caller_reference_price: f32,
     upper_auction_collar_price: f32,
     lower_auction_collar_price: f32,
     auction_caller_extension: u32,
-
 
     pub fn initFromBytes(payload: []const u8) LULDAuctionCollarMessage {
         return LULDAuctionCollarMessage{
@@ -316,13 +315,13 @@ pub const LULDAuctionCollarMessage = struct {
             .auction_caller_reference_price = utils.readF32(payload, 18),
             .upper_auction_collar_price = utils.readF32(payload, 22),
             .lower_auction_collar_price = utils.readF32(payload, 26),
-            .auction_caller_extension = utils.readU32(payload, 30), 
+            .auction_caller_extension = utils.readU32(payload, 30),
         };
     }
-    
+
     pub fn printInfo(self: LULDAuctionCollarMessage) void {
         std.debug.print("LULDAuctionCollarMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  stock = {s}\n", .{self.stock});
         std.debug.print("  auction_caller_reference_price = {d}\n", .{self.auction_caller_reference_price});
         std.debug.print("  upper_auction_collar_price = {d}\n", .{self.upper_auction_collar_price});
@@ -333,7 +332,7 @@ pub const LULDAuctionCollarMessage = struct {
 };
 
 pub const OperationalHaltMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     stock: [8]u8,
     market_code: u8,
     operation_halt_message: u8,
@@ -349,7 +348,7 @@ pub const OperationalHaltMessage = struct {
 
     pub fn printInfo(self: OperationalHaltMessage) void {
         std.debug.print("OperationalHaltMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  stock = {s}\n", .{self.stock});
         std.debug.print("  market_code = {d}\n", .{self.market_code});
         std.debug.print("  operation_halt_message = {d}\n", .{self.operation_halt_message});
@@ -358,7 +357,7 @@ pub const OperationalHaltMessage = struct {
 };
 
 pub const AddOrderNoMPIDMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     order_reference_number: u64,
     buy_sell_indicator: u8,
     shares: u32,
@@ -366,7 +365,7 @@ pub const AddOrderNoMPIDMessage = struct {
     price: f32,
 
     pub fn initFromBytes(payload: []const u8) AddOrderNoMPIDMessage {
-        return AddOrderNoMPIDMessage {
+        return AddOrderNoMPIDMessage{
             .header = MessageHeader.initFromBytes(payload),
             .order_reference_number = utils.readU64(payload, 10),
             .buy_sell_indicator = utils.readU8(payload, 18),
@@ -399,19 +398,19 @@ pub const AddOrderWithMPIDMessage = struct {
 
     pub fn initFromBytes(payload: []const u8) AddOrderWithMPIDMessage {
         return AddOrderWithMPIDMessage{
-            .header = MessageHeader.initFromBytes(payload), 
+            .header = MessageHeader.initFromBytes(payload),
             .order_reference_number = utils.readU64(payload, 10),
             .buy_sell_indicator = utils.readU8(payload, 18),
             .shares = utils.readU32(payload, 19),
             .stock = payload[23..31].*,
             .price = utils.readF32(payload, 31),
-            .attribution = payload[35..39].*, 
+            .attribution = payload[35..39].*,
         };
     }
 
     pub fn printInfo(self: AddOrderWithMPIDMessage) void {
         std.debug.print("AddOrderWithMPIDMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  order_reference_number = {d}\n", .{self.order_reference_number});
         std.debug.print("  buy_sell_indicator = {c}\n", .{self.buy_sell_indicator});
         std.debug.print("  shares = {d}\n", .{self.shares});
@@ -423,7 +422,7 @@ pub const AddOrderWithMPIDMessage = struct {
 };
 
 pub const OrderExecutedMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     order_reference_number: u64,
     executed_shares: u32,
     match_number: u64,
@@ -439,7 +438,7 @@ pub const OrderExecutedMessage = struct {
 
     pub fn printInfo(self: OrderExecutedMessage) void {
         std.debug.print("OrderExecutedMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  order_reference_number = {d}\n", .{self.order_reference_number});
         std.debug.print("  executed_shares = {d}\n", .{self.executed_shares});
         std.debug.print("  match_number = {d}\n", .{self.match_number});
@@ -479,7 +478,7 @@ pub const OrderExecutedwithPriceMessage = struct {
 };
 
 pub const OrderCancelMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     order_reference_number: u64,
     cancelled_shares: u32,
 
@@ -487,7 +486,7 @@ pub const OrderCancelMessage = struct {
         return OrderCancelMessage{
             .header = MessageHeader.initFromBytes(payload),
             .order_reference_number = utils.readU64(payload, 10),
-            .cancelled_shares = utils.readU32(payload, 18), 
+            .cancelled_shares = utils.readU32(payload, 18),
         };
     }
 
@@ -501,7 +500,7 @@ pub const OrderCancelMessage = struct {
 };
 
 pub const OrderDeleteMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     order_reference_number: u64,
 
     pub fn initFromBytes(payload: []const u8) OrderDeleteMessage {
@@ -520,14 +519,14 @@ pub const OrderDeleteMessage = struct {
 };
 
 pub const OrderReplaceMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     original_order_reference_number: u64,
     new_order_reference_number: u64,
     shares: u32,
     price: f32,
 
     pub fn initFromBytes(payload: []const u8) OrderReplaceMessage {
-        return OrderReplaceMessage {
+        return OrderReplaceMessage{
             .header = MessageHeader.initFromBytes(payload),
             .original_order_reference_number = utils.readU64(payload, 10),
             .new_order_reference_number = utils.readU64(payload, 18),
@@ -557,7 +556,7 @@ pub const TradeMessage = struct {
     match_number: u64,
 
     pub fn initFromBytes(payload: []const u8) TradeMessage {
-        return TradeMessage {
+        return TradeMessage{
             .header = MessageHeader.initFromBytes(payload),
             .order_reference_number = utils.readU64(payload, 10),
             .buy_sell_indicator = utils.readU8(payload, 18),
@@ -570,7 +569,7 @@ pub const TradeMessage = struct {
 
     pub fn printInfo(self: TradeMessage) void {
         std.debug.print("TradeMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  order_reference_number = {d}\n", .{self.order_reference_number});
         std.debug.print("  buy_sell_indicator = {c}\n", .{self.buy_sell_indicator});
         std.debug.print("  shares = {d}\n", .{self.shares});
@@ -582,7 +581,7 @@ pub const TradeMessage = struct {
 };
 
 pub const CrossTradeMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     shares: u64,
     stock: [8]u8,
     cross_price: f32,
@@ -596,7 +595,7 @@ pub const CrossTradeMessage = struct {
             .stock = payload[18..26].*,
             .cross_price = utils.readF32(payload, 26),
             .match_number = utils.readU64(payload, 30),
-            .cross_type = utils.readU8(payload, 38), 
+            .cross_type = utils.readU8(payload, 38),
         };
     }
 
@@ -613,26 +612,26 @@ pub const CrossTradeMessage = struct {
 };
 
 pub const BrokenTradeMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     match_number: u64,
 
     pub fn initFromBytes(payload: []const u8) BrokenTradeMessage {
-        return BrokenTradeMessage {
+        return BrokenTradeMessage{
             .header = MessageHeader.initFromBytes(payload),
-            .match_number = utils.readU64(payload, 10), 
+            .match_number = utils.readU64(payload, 10),
         };
     }
 
     pub fn printInfo(self: BrokenTradeMessage) void {
         std.debug.print("BrokenTradeMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  match_number = {d}\n", .{self.match_number});
         std.debug.print("}}\n\n", .{});
     }
 };
 
 pub const NOIIMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     paired_shares: u64,
     imbalance_shares: u64,
     imbalance_direction: u8,
@@ -654,13 +653,13 @@ pub const NOIIMessage = struct {
             .near_price = utils.readF32(payload, 39),
             .current_reference_price = utils.readF32(payload, 43),
             .cross_type = utils.readU8(payload, 47),
-            .price_variation_indicator = utils.readU8(payload, 48), 
+            .price_variation_indicator = utils.readU8(payload, 48),
         };
     }
 
     pub fn printInfo(self: NOIIMessage) void {
         std.debug.print("NOIIMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  paired_shares = {d}\n", .{self.paired_shares});
         std.debug.print("  imbalance_shares = {d}\n", .{self.imbalance_shares});
         std.debug.print("  imbalance_direction = {c}\n", .{self.imbalance_direction});
@@ -675,7 +674,7 @@ pub const NOIIMessage = struct {
 };
 
 pub const DirectListingWithCapitalRaisePriceMessage = struct {
-    header: MessageHeader, 
+    header: MessageHeader,
     stock: [8]u8,
     open_eligibility_status: u8,
     minimum_allowable_price: f32,
@@ -701,7 +700,7 @@ pub const DirectListingWithCapitalRaisePriceMessage = struct {
 
     pub fn printInfo(self: DirectListingWithCapitalRaisePriceMessage) void {
         std.debug.print("DirectListingWithCapitalRaisePriceMessage {{\n", .{});
-        self.header.printInfo(); 
+        self.header.printInfo();
         std.debug.print("  stock = {s}\n", .{self.stock});
         std.debug.print("  open_eligibility_status = {c}\n", .{self.open_eligibility_status});
         std.debug.print("  minimum_allowable_price = {d}\n", .{self.minimum_allowable_price});

@@ -1,23 +1,27 @@
 const std = @import("std");
 
+pub fn intToBytesLE(comptime T: type, x: T) [@sizeOf(T)]u8 {
+    return std.mem.toBytes(T, x);
+}
+
 pub fn readU8(bytes: []const u8, offset: usize) u8 {
     return bytes[offset];
 }
 
 pub fn readU16(bytes: []const u8, offset: usize) u16 {
-    return std.mem.readInt(u16, bytes[offset..offset+2][0..2], .big);
+    return std.mem.readInt(u16, bytes[offset .. offset + 2][0..2], .big);
 }
 
 pub fn readU32(bytes: []const u8, offset: usize) u32 {
-    return std.mem.readInt(u32, bytes[offset..offset+4][0..4], .big);
+    return std.mem.readInt(u32, bytes[offset .. offset + 4][0..4], .big);
 }
 
 pub fn readU48(bytes: []const u8, offset: usize) u48 {
-    return std.mem.readInt(u48, bytes[offset..offset+6][0..6], .big);
+    return std.mem.readInt(u48, bytes[offset .. offset + 6][0..6], .big);
 }
 
 pub fn readU64(bytes: []const u8, offset: usize) u64 {
-    return std.mem.readInt(u64, bytes[offset..offset+8][0..8], .big);
+    return std.mem.readInt(u64, bytes[offset .. offset + 8][0..8], .big);
 }
 
 pub fn readF8(bytes: []const u8, offset: usize) f16 {
@@ -72,7 +76,7 @@ pub fn printTradingState(code: u8) []const u8 {
         'H' => "Halted across all U.S. equity markets / SROs",
         'P' => "Paused across all U.S. equity markets / SROs (Nasdaq---listed securities only)",
         'Q' => "Quotation only period for cross-•-SRO halt or pause",
-        'T' => "Trading on Nasdaq", 
+        'T' => "Trading on Nasdaq",
         else => "Unknown Trading State Code",
     };
 }

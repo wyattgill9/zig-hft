@@ -1,4 +1,5 @@
 const std = @import("std");
+const print = @import("std").debug.print;
 const Order = @import("./order.zig").Order;
 const OrderBook = @import("./orderbook.zig").OrderBook;
 
@@ -20,19 +21,21 @@ pub fn main() !void {
     try ob.addLimitOrder(o3);
     try ob.addLimitOrder(o4);
 
-    const bid = ob.popFrontAtPrice(100.0, .bid);
+    try ob.removeOrderById(1);
 
-    const ask = ob.popFrontAtPrice(101.0, .ask);
+    ob.printInfo();
 
-    if (bid) |b| {
-        std.debug.print("Popped BID order: id={}, qty={}\n", .{ b.order_id, b.quantity });
-    } else {
-        std.debug.print("No BID order at 100.0\n", .{});
-    }
+    // const best_bid = ob.getBestBidPrice();
+    // const best_ask = ob.getBestAskPrice();
 
-    if (ask) |a| {
-        std.debug.print("Popped ASK order: id={}, qty={}\n", .{ a.order_id, a.quantity });
-    } else {
-        std.debug.print("No ASK order at 101.0\n", .{});
-    }
+    // if (best_bid) |bid| {
+    //     std.debug.print("Best Bid={d}", .{bid});
+    // } else {
+    //     std.debug.print("No best bid", .{});
+    // }
+    // if (best_ask) |ask| {
+    //     std.debug.print(", Best Ask={d}\n", .{ask});
+    // } else {
+    //     std.debug.print(", No best ask\n", .{});
+    // }
 }
