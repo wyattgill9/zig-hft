@@ -16,12 +16,16 @@ pub fn main() !void {
     const o3 = Order.init(3, 101.0, 7, .ask, 12345680);
     const o4 = Order.init(4, 101.0, 3, .ask, 12345681);
 
+    const o5 = Order.init(5, 100.0, 200, .bid, 12345677); 
+
+
     try ob.addLimitOrder(o1);
     try ob.addLimitOrder(o2);
     try ob.addLimitOrder(o3);
     try ob.addLimitOrder(o4);
-
-    try ob.removeOrderById(1);
+    
+    // try ob.removeOrderById(1);
+    try ob.replaceOrderById(o5, 1);
 
     ob.printInfo();
 

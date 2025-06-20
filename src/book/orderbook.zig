@@ -94,6 +94,14 @@ pub const OrderBook = struct {
         return order_val;
     }
 
+    pub fn getOrderById(self: *OrderBook, order_id: u64) ?Order {
+        const maybe_ptr = self.order_id_map.get(order_id);
+        if (maybe_ptr) |order_ptr| {
+            return order_ptr.*;
+        }
+        return null;
+    }
+
     pub fn removeOrderById(self: *OrderBook, order_id: u64) !void {
         const maybe_ptr = self.order_id_map.get(order_id);
         if (maybe_ptr) |order_ptr| {
@@ -106,7 +114,6 @@ pub const OrderBook = struct {
                 .bid => &self.bids,
                 .ask => &self.asks,
             };
-
             const queue_ptr = book.get(price_key) orelse return error.OrderNotFound;
             var node = queue_ptr.head;
             while (node) |n| {
@@ -132,6 +139,11 @@ pub const OrderBook = struct {
             return;
         }
         return error.OrderNotFound;
+    }
+
+    pub fn replaceOrderById(self: *OrderBook, new_order: Order, original_order_id: u64) !void {
+        try self.removeOrderById(original_order_id);
+        try self.addLimitOrder(new_order);
     }
 
     pub fn getBestBidOrder(self: *OrderBook) ?Order {
