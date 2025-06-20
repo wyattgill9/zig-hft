@@ -27,6 +27,8 @@ pub fn main() !void {
     // try ob.removeOrderById(1);
     try ob.replaceOrderById(o5, 1);
 
+    try ob.popFrontAtPrice(100.0, .bid);
+    try ob.popFrontAtPrice(100.0, .bid);
     ob.printInfo();
 
     // const best_bid = ob.getBestBidPrice();

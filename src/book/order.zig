@@ -8,7 +8,8 @@ pub const Side = enum(u8) {
 pub const Order = struct {
     order_id: u64,
     price: f32,
-    quantity: u32,
+    original_quantity: u32,
+    remaining_quantity: u32,
     side: Side,
     timestamp: u64,
 
@@ -16,7 +17,8 @@ pub const Order = struct {
         return Order{
             .order_id = order_id,
             .price = price,
-            .quantity = quantity,
+            .original_quantity = quantity,
+            .remaining_quantity = quantity, 
             .side = side,
             .timestamp = timestamp,
         };
