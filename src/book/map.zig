@@ -152,6 +152,13 @@ pub fn Map(comptime K: type, comptime V: type) type {
             return null;
         }
 
+        pub fn getPtr(self: *Self, key: K) ?*V {
+            if (self.findNode(key)) |node| {
+                return &node.value;
+            }
+            return null;
+        }
+
         pub fn contains(self: *const Self, key: K) bool {
             return self.findNode(key) != null;
         }
