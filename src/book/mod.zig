@@ -21,22 +21,13 @@ pub fn main() !void {
     try ob.addLimitOrder(o3);
     try ob.addLimitOrder(o4);
     
-    try ob.popFrontAtPrice(100.0, .bid);
-    try ob.popFrontAtPrice(100.0, .bid);
-    
+    // try ob.popFrontAtPrice(100.0, .bid);
+    // try ob.popFrontAtPrice(100.0, .bid);
+      
+    // const a = try ob.getOrderById(1); 
+    // try ob.modifyOrder(1, 10); 
+     
+    try ob.removeOrderById(2);
+
     ob.printInfo();
-
-    // const best_bid = ob.getBestBidPrice();
-    // const best_ask = ob.getBestAskPrice();
-
-    // if (best_bid) |bid| {
-    //     std.debug.print("Best Bid={d}", .{bid});
-    // } else {
-    //     std.debug.print("No best bid", .{});
-    // }
-    // if (best_ask) |ask| {
-    //     std.debug.print(", Best Ask={d}\n", .{ask});
-    // } else {
-    //     std.debug.print(", No best ask\n", .{});
-    // }
 }
