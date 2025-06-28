@@ -12,8 +12,9 @@ pub const Order = struct {
     remaining_quantity: u32,
     side: Side,
     timestamp: u64,
+    attribution: ?[4]u8, // null if AddOrderNoMPID
 
-    pub fn init(order_id: u64, price: f32, quantity: u32, side: Side, timestamp: u64) Order {
+    pub fn init(order_id: u64, price: f32, quantity: u32, side: Side, timestamp: u64, attribution: ?[4]u8) Order {
         return Order{
             .order_id = order_id,
             .price = price,
@@ -21,6 +22,7 @@ pub const Order = struct {
             .remaining_quantity = quantity, 
             .side = side,
             .timestamp = timestamp,
+            .attribution = attribution,
         };
     }
 };

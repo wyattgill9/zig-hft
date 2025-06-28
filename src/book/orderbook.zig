@@ -15,7 +15,7 @@ pub const OrderBook = struct {
     order_id_map: AutoHashMap(u64, *OrderQueue.Node), 
 
     pub fn init(allocator: std.mem.Allocator) OrderBook {
-        return OrderBook{
+        return OrderBook {
             .allocator = allocator,
             .bids = Map(f64, OrderQueue).init(allocator),
             .asks = Map(f64, OrderQueue).init(allocator),
@@ -56,8 +56,13 @@ pub const OrderBook = struct {
                 _ = book.erase(price_key);
             }
         }
-    }   
-    
+    }
+
+    // core logic -- testing for now 
+    pub fn editBook(self: *OrderBook, order: Order) !void {
+        try self.addLimitOrder(order);
+    } 
+
     pub fn addLimitOrder(self: *OrderBook, order: Order) !void {
         // gets book and key (price level), given side and price 
         const book_info = self.getBookAndKey(order.side, order.price);

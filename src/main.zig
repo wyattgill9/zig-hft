@@ -34,17 +34,18 @@ pub fn main() !void {
         const msg = parse.parseITCHMessage(msg_type, buf[offset .. offset + len]);
         const time = tsc.delta(i128, start, std.time.nanoTimestamp());
 
-        msg.printInfo();
-        // const order = book.processMessage();    
-        // try ob.editBook(order);
-        
+        const maybe_order = parse.processMessage(msg);
+        if (maybe_order) |order| {
+            // std.debug.print("{?}\n", .{order});  
+            try ob.editBook(order); 
+        }
 
         offset += len;
         total_time += time;
         count += 1;
     }
     
-    // ob.printInfo();
+    ob.printInfo();
 
     std.debug.print("Messages: {d}, Total: {d}ns, Avg: {d}ns\n", .{ count, total_time, if (count > 0) total_time / count else 0 });
 }

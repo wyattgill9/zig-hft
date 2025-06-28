@@ -2,6 +2,45 @@ const structs = @import("structs.zig");
 const ITCHMessage = structs.ITCHMessage;
 const utils = @import("utils.zig");
 const std = @import("std");
+const Order = @import("../book/order.zig").Order;
+const Side = @import("../book/order.zig").Side;
+
+pub fn processMessage(msg: ITCHMessage) ?Order {
+    switch (msg) {
+        .AddOrderNoMPIDMessage => |add| {
+            return Order.init(
+                add.order_reference_number,
+                add.price,
+                add.shares,
+                sideFromIndicator(add.buy_sell_indicator),
+                add.header.timestamp,
+                // add.stock, -- inferred
+                null, // No MPID
+            );
+        },
+        .AddOrderWithMPIDMessage => |add| {
+            return Order.init(
+                add.order_reference_number,
+                add.price,
+                add.shares,
+                sideFromIndicator(add.buy_sell_indicator),
+                add.header.timestamp,
+                // add.stock, -- inferred
+                add.attribution,
+            );
+        },
+        else => return null,
+    }
+}
+
+pub fn sideFromIndicator(ind: u8) Side {
+    return switch (ind) {
+        'B' => Side.bid,
+        'S' => Side.ask,
+        else => @panic("Unknown buy_sell_indicator"),
+    };
+}
+
 
 pub fn parseITCHMessage(msg_type: u8, full_message: []const u8) ITCHMessage {
     const payload = full_message[1..];
