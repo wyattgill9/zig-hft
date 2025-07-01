@@ -5,7 +5,7 @@ const tsc = @import("tsc/mod.zig");
 
 pub fn main() !void { 
     // Buffer/File TODO: ingest from NASDAQ
-    var file = try std.fs.cwd().openFile("./data/AddOrderAndCancel", .{});
+    var file = try std.fs.cwd().openFile("./src/data/AddOrderAndCancel", .{});
     defer file.close();
     
     var buf: [1024]u8 = undefined;

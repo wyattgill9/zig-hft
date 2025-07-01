@@ -29,7 +29,7 @@ pub fn main() !void {
     };
 
     // Create file and write the message sequence
-    const file = try std.fs.cwd().createFile("./data/AddOrderAndCancel", .{
+    const file = try std.fs.cwd().createFile("./src/data/AddOrderAndCancel", .{
         .truncate = true,
         .read = false,
     });
