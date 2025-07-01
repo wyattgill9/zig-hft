@@ -5,6 +5,7 @@ const List = @import("./list.zig").List;
 const Map = @import("./map.zig").Map;
 const Order = @import("./order.zig").Order;
 const Side = @import("./order.zig").Side;
+const ITCHMessage = @import("../parser/structs.zig").ITCHMessage;
 
 pub const OrderQueue = List(Order);
 
@@ -59,9 +60,57 @@ pub const OrderBook = struct {
     }
 
     // core logic -- testing for now 
-    pub fn editBook(self: *OrderBook, order: Order) !void {
-        try self.addLimitOrder(order);
-    } 
+    pub fn editBook(self: *OrderBook, msg: ITCHMessage) !void {
+        switch (msg) {
+            .AddOrderNoMPIDMessage => |add| {
+                const order = Order.init(
+                    add.order_reference_number,
+                    add.price,
+                    add.shares,
+                    sideFromIndicator(add.buy_sell_indicator),
+                    add.header.timestamp,
+                    // add.stock, -- inferred
+                    null, // No MPID
+                );
+                try self.addLimitOrder(order);
+                return;
+            },
+            .AddOrderWithMPIDMessage => |add| {
+                const order = Order.init(
+                    add.order_reference_number,
+                    add.price,
+                    add.shares,
+                    sideFromIndicator(add.buy_sell_indicator),
+                    add.header.timestamp,
+                    // add.stock, -- inferred
+                    add.attribution,
+                );
+
+                try self.addLimitOrder(order);
+                return;
+            },
+            .OrderCancelMessage => |cancel| {
+                // std.debug.print("Canceling order {d} with {d} shares\n", .{cancel.order_reference_number, cancel.cancelled_shares}); 
+                try self.modifyOrder(cancel.order_reference_number, cancel.cancelled_shares);
+                return; 
+            },
+            // .OrderDeleteMessage => |del| {
+               // return; 
+            // },
+            // .OrderReplaceMessage => |rep| {
+                // return;                
+            // },
+            else => return error.InvalidITCHMessage,
+        }
+    }
+    
+    pub fn sideFromIndicator(ind: u8) Side {
+        return switch (ind) {
+            'B' => Side.bid,
+            'S' => Side.ask,
+            else => @panic("Unknown buy_sell_indicator"),
+        };
+    }
 
     pub fn addLimitOrder(self: *OrderBook, order: Order) !void {
         // gets book and key (price level), given side and price 

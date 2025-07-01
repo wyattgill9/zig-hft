@@ -1,5 +1,10 @@
 const std = @import("std");
 
+// const OrderType = union(enum) {
+    // LimitOrder: LimitOrder 
+
+// };
+
 pub const Side = enum(u8) {
     bid = 0,
     ask = 1,

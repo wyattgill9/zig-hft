@@ -17,12 +17,16 @@ pub const ITCHMessage = union(enum) {
 
     AddOrderNoMPIDMessage: AddOrderNoMPIDMessage,
     AddOrderWithMPIDMessage: AddOrderWithMPIDMessage,
+
     OrderExecutedMessage: OrderExecutedMessage,
     OrderExecutedwithPriceMessage: OrderExecutedwithPriceMessage,
+    
     OrderCancelMessage: OrderCancelMessage,
     OrderDeleteMessage: OrderDeleteMessage,
     OrderReplaceMessage: OrderReplaceMessage,
+    
     TradeMessage: TradeMessage,
+    
     CrossTradeMessage: CrossTradeMessage,
     BrokenTradeMessage: BrokenTradeMessage,
 

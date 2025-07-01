@@ -5,7 +5,7 @@ const tsc = @import("tsc/mod.zig");
 
 pub fn main() !void { 
     // Buffer/File TODO: ingest from NASDAQ
-    var file = try std.fs.cwd().openFile("./src/data/ITCHMessage", .{});
+    var file = try std.fs.cwd().openFile("./data/AddOrderAndCancel", .{});
     defer file.close();
     
     var buf: [1024]u8 = undefined;
@@ -34,11 +34,9 @@ pub fn main() !void {
         const msg = parse.parseITCHMessage(msg_type, buf[offset .. offset + len]);
         const time = tsc.delta(i128, start, std.time.nanoTimestamp());
 
-        const maybe_order = parse.processMessage(msg);
-        if (maybe_order) |order| {
-            // std.debug.print("{?}\n", .{order});  
-            try ob.editBook(order); 
-        }
+        // msg.printInfo(); 
+        try ob.editBook(msg); 
+        ob.printInfo(); 
 
         offset += len;
         total_time += time;
