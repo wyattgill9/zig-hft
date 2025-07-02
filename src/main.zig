@@ -2,6 +2,7 @@ const std = @import("std");
 const parse = @import("parser/mod.zig");
 const book = @import("book/mod.zig");
 const tsc = @import("tsc/mod.zig");
+const core = @import("core/mod.zig");
 
 pub fn main() !void {
     const debug = false;
@@ -39,6 +40,11 @@ pub fn main() !void {
         // msg.printInfo(); 
         try ob.editBook(msg); 
         if (debug) ob.printBook(); 
+        
+        // const out_order = try core.processOrderBook(&ob);
+        // if(out_order != null) {
+            // egress.sendOrder(out_order);
+        // }    
 
         offset += len;
         total_time += time;
