@@ -14,13 +14,16 @@ pub const OrderBook = struct {
     bids: Map(f64, OrderQueue),
     asks: Map(f64, OrderQueue),
     order_id_map: AutoHashMap(u64, *OrderQueue.Node), 
+    debug: bool, 
 
-    pub fn init(allocator: std.mem.Allocator) OrderBook {
+
+    pub fn init(allocator: std.mem.Allocator, debug: bool) OrderBook {
         return OrderBook {
             .allocator = allocator,
             .bids = Map(f64, OrderQueue).init(allocator),
             .asks = Map(f64, OrderQueue).init(allocator),
             .order_id_map = AutoHashMap(u64, *OrderQueue.Node).init(allocator), 
+            .debug = debug 
         };
     }
 
@@ -63,6 +66,7 @@ pub const OrderBook = struct {
     pub fn editBook(self: *OrderBook, msg: ITCHMessage) !void {
         switch (msg) {
             .AddOrderNoMPIDMessage => |add| {
+                if (self.debug) { std.debug.print("Adding order {d} with quantitiy {d} at price {d}\n\n", .{add.order_reference_number, add.shares, add.price}); } 
                 const order = Order.init(
                     add.order_reference_number,
                     add.price,
@@ -73,9 +77,11 @@ pub const OrderBook = struct {
                     null, // No MPID
                 );
                 try self.addLimitOrder(order);
+
                 return;
             },
             .AddOrderWithMPIDMessage => |add| {
+                if (self.debug) { std.debug.print("Adding order {d} with quantitiy {d} at price {d}\n\n", .{add.order_reference_number, add.shares, add.price}); } 
                 const order = Order.init(
                     add.order_reference_number,
                     add.price,
@@ -90,19 +96,54 @@ pub const OrderBook = struct {
                 return;
             },
             .OrderCancelMessage => |cancel| {
-                // std.debug.print("Canceling order {d} with {d} shares\n", .{cancel.order_reference_number, cancel.cancelled_shares}); 
+                if (self.debug) { std.debug.print("partialy cancelling order {d} with {d} shares\n", .{cancel.order_reference_number, cancel.cancelled_shares}); } 
                 try self.modifyOrder(cancel.order_reference_number, cancel.cancelled_shares);
                 return; 
             },
-            // .OrderDeleteMessage => |del| {
-               // return; 
-            // },
-            // .OrderReplaceMessage => |rep| {
-                // return;                
-            // },
+            .OrderDeleteMessage => |del| {
+                // Remove the entire order from the book
+                if (self.debug) { std.debug.print("Deleting order {d}\n", .{del.order_reference_number}); } 
+                try self.removeOrderById(del.order_reference_number);
+                return; 
+            },
+            .OrderReplaceMessage => |rep| {
+                // Remove the original order and create a new one but preserve the side, timestamp, and MPID 
+                if (self.debug) { std.debug.print("Replacing order {d} with quantitiy {d} at price {d}\n\n", .{rep.original_order_reference_number, rep.shares, rep.price}); } 
+                const original_order = self.order_id_map.get(rep.original_order_reference_number) orelse return error.NotFound;
+                
+                const side = original_order.value.side;
+                const timestamp = original_order.value.timestamp;
+                const mpid = original_order.value.attribution;
+                
+                try self.removeOrderById(rep.original_order_reference_number);
+                
+                const new_order = Order.init(
+                    rep.new_order_reference_number,
+                    rep.price,
+                    rep.shares,
+                    side,
+                    timestamp, 
+                    mpid,
+                );
+                
+                try self.addLimitOrder(new_order);
+                return;                
+            },
+            .OrderExecutedMessage => |exec| {
+                // partial execution -> reduce the order quantity
+                if (self.debug) { std.debug.print("Executing order {d} with quantitiy {d}\n\n", .{exec.order_reference_number, exec.executed_shares}); } 
+                try self.modifyOrder(exec.order_reference_number, exec.executed_shares);
+                return;
+            },
+            .OrderExecutedwithPriceMessage => |exec| {
+                // partial execution with price -> reduce the order quantity
+                if (self.debug) { std.debug.print("Executing order {d} with quantitiy {d} at price {d}\n\n", .{exec.order_reference_number, exec.executed_shares, exec.execution_price}); } 
+                try self.modifyOrder(exec.order_reference_number, exec.executed_shares);
+                return;
+            },
             else => return error.InvalidITCHMessage,
         }
-    }
+    }    
     
     pub fn sideFromIndicator(ind: u8) Side {
         return switch (ind) {
@@ -121,8 +162,11 @@ pub const OrderBook = struct {
             try book_info.book.insert(book_info.key, OrderQueue.init(self.allocator));
             break :blk book_info.book.getPtr(book_info.key).?;
         };
-
+        
+        if(self.debug) { std.debug.print("Adding order {d} with quantitiy {d} at price {d}\n\n", .{order.order_id, order.original_quantity, order.price}); }
+        
         const node = try queue_ptr.append(order);
+        
         // node is a pointer to the inserted node
         try self.order_id_map.put(order.order_id, node);         
     }
@@ -132,7 +176,9 @@ pub const OrderBook = struct {
 
         var queue = book_info.book.getPtr(book_info.key) orelse return error.NotFound;
         const node = queue.head orelse return error.NotFound;
-
+        
+        if (self.debug) { std.debug.print("Popping order {d} with quantitiy {d} at price {d}\n\n", .{node.value.order_id, node.value.remaining_quantity, node.value.price}); }
+        
         // remove from order_id_map before popping from the queue
         _ = self.order_id_map.remove(node.value.order_id);
 
@@ -142,6 +188,7 @@ pub const OrderBook = struct {
     }
     
     pub fn getOrderById(self: *OrderBook, order_id: u64) !*Order {
+        if (self.debug) { std.debug.print("Getting order {d}\n", .{order_id}); } 
         if(self.order_id_map.getPtr(order_id)) |order| {
             return order.*;
         } else {
@@ -156,9 +203,10 @@ pub const OrderBook = struct {
         const order = node.value;
         const book_info = self.getBookAndKey(order.side, order.price);
         var queue_ptr = book_info.book.getPtr(book_info.key) orelse return error.NotFound;
-
+        
+        if (self.debug) { std.debug.print("Removing order {d} with quantitiy {d} at price {d}\n\n", .{order.order_id, order.remaining_quantity, order.price}); }
         queue_ptr.remove(node);
-
+        
         _ = self.order_id_map.remove(order_id);
 
         cleanupEmptyQueue(book_info.book, book_info.key);
@@ -167,10 +215,10 @@ pub const OrderBook = struct {
     
     pub fn modifyOrder(self: *OrderBook, order_id: u64, quantity: u32) !void {
         if (self.order_id_map.get(order_id)) |node| {
-            // std.debug.print("Before: {any}\n", .{order});
-            // std.debug.print("Before qty: {d}\n", .{order.remaining_quantity});
+            if (self.debug) { std.debug.print(" -> Modifying order {d} with quantitiy {d} at price {d} -> new quantitiy {d}\n\n",
+                .{order_id, quantity, node.value.price, node.value.remaining_quantity - quantity}); } 
+            
             node.value.remaining_quantity -= quantity; 
-            // std.debug.print("After qty: {d}\n", .{order.remaining_quantity});
         } else {
             std.debug.print("Order not found in map for id: {}\n", .{order_id});
         }
@@ -179,6 +227,7 @@ pub const OrderBook = struct {
     pub fn getBestBidOrder(self: *OrderBook) ?*Order {
         var it = self.bids.iterator();
         if (it.next()) |entry| {
+            if (self.debug) { std.debug.print("Best bid order: {d}\n", .{entry.value.peekFront().*.printInfo(),}); }
             return entry.value.peekFront();
         }
         return null;
@@ -187,6 +236,7 @@ pub const OrderBook = struct {
     pub fn getBestAskOrder(self: *OrderBook) ?*Order {
         var it = self.asks.iterator();
         if (it.next()) |entry| {
+            if (self.debug) { std.debug.print("Best ask order: {d}\n", .{entry.value.peekFront().*.printInfo(), }); } 
             return entry.value.peekFront();
         }
         return null;
@@ -200,7 +250,7 @@ pub const OrderBook = struct {
         return if (self.getBestAskOrder()) |order| order.price else null;
     }
 
-    pub fn printInfo(self: *OrderBook) void {
+    pub fn printBook(self: *OrderBook) void {
         print("OrderBook Info:\n", .{});
 
         print("Bids:\n", .{});
@@ -232,5 +282,6 @@ pub const OrderBook = struct {
                 node = n.next;
             }
         }
+        print("\n", .{});    
     }
 };

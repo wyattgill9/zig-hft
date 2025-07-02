@@ -3,9 +3,11 @@ const parse = @import("parser/mod.zig");
 const book = @import("book/mod.zig");
 const tsc = @import("tsc/mod.zig");
 
-pub fn main() !void { 
+pub fn main() !void {
+    const debug = false;
+
     // Buffer/File TODO: ingest from NASDAQ
-    var file = try std.fs.cwd().openFile("./src/data/AddOrderAndCancel", .{});
+    var file = try std.fs.cwd().openFile("./src/data/ComprehensiveOrderBookOps", .{});
     defer file.close();
     
     var buf: [1024]u8 = undefined;
@@ -17,7 +19,7 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var ob = book.OrderBook.init(allocator);
+    var ob = book.OrderBook.init(allocator, debug);
     defer ob.deinit();
 
     // Stats 
@@ -36,14 +38,13 @@ pub fn main() !void {
 
         // msg.printInfo(); 
         try ob.editBook(msg); 
-        ob.printInfo(); 
+        if (debug) ob.printBook(); 
 
         offset += len;
         total_time += time;
         count += 1;
     }
     
-    ob.printInfo();
-
-    std.debug.print("Messages: {d}, Total: {d}ns, Avg: {d}ns\n", .{ count, total_time, if (count > 0) total_time / count else 0 });
+    ob.printBook();
+    if (debug) std.debug.print("Messages processed: {d}, Total: {d}ns, Avg: {d}ns\n", .{ count, total_time, if (count > 0) total_time / count else 0 });
 }
