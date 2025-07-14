@@ -2,6 +2,8 @@ const structs = @import("structs.zig");
 const ITCHMessage = structs.ITCHMessage;
 const utils = @import("utils.zig");
 const std = @import("std");
+const Order = @import("../book/order.zig").Order;
+const Side = @import("../book/order.zig").Side;
 
 pub fn parseITCHMessage(msg_type: u8, full_message: []const u8) ITCHMessage {
     const payload = full_message[1..];
